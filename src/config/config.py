@@ -1,4 +1,3 @@
-import secrets
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="../../.env",
         extra="ignore",
     )
 
@@ -14,9 +13,8 @@ class Settings(BaseSettings):
     PATH_TO_DB: str = str(BASE_DIR / "cinema.db")
     DATABASE_URL: str = f"sqlite+aiosqlite:///{PATH_TO_DB}"
 
-    SECRET_KEY_ACCESS: str = secrets.token_hex(32)
-    SECRET_KEY_REFRESH: str = secrets.token_hex(32)
-    JWT_SIGNING_ALGORITHM: str = "HS256"
+    SECRET_KEY: str
+    JWT_ENCODING_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
