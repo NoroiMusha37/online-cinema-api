@@ -74,7 +74,7 @@ class UserProfile(Base):
     last_name: Mapped[str]
     avatar: Mapped[Optional[str]]
     gender: Mapped[Optional[GenderEnum]]
-    date_of_birth: Mapped[date]
+    date_of_birth: Mapped[Optional[date]]
     info: Mapped[Optional[str]]
 
     user: Mapped[User] = relationship("User", back_populates="profile")
