@@ -1,29 +1,37 @@
 from fastapi import HTTPException
-from pydantic import EmailStr
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from starlette import status
 
 from src.core.security import hash_password
 from src.models.user import User, UserGroup, UserGroupEnum, UserProfile
-from src.schemas.user import UserCreate, UserProfileCreate, UserProfileUpdate, UserUpdateAdmin
+from src.schemas.user import UserCreate, UserProfileUpdate, UserUpdateAdmin
 
 
 async def get_user_by_email(
-        email: EmailStr, session: AsyncSession
+        email: str, session: AsyncSession
 ) -> User | None:
     result = await session.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
 
 async def get_user_by_id(user_id: int, session: AsyncSession) -> User | None:
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await session.execute(select(User)
+                                   .options(
+                                            selectinload(User.group),
+                                            selectinload(User.profile)
+                                   )
+                                   .where(User.id == user_id)
+                                   )
     return result.scalar_one_or_none()
 
 
 async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
     if await get_user_by_email(user_in.email, session):
         raise HTTPException(
-            status_code=400, detail="Email already registered"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
         )
 
     result = await session.execute(select(UserGroup)
