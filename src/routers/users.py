@@ -18,7 +18,7 @@ router = APIRouter(prefix="/users")
 
 
 def send_reset_email(email: str, token: str):
-    print(f"Reset sent to {email}")
+    print(f"Reset token sent to {email}: {token}")
 
 
 @router.get("/me", response_model=UserRead)

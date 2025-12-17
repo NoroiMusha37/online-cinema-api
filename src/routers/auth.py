@@ -17,7 +17,7 @@ from src.crud import token as token_crud
 router = APIRouter(prefix="/auth")
 
 def send_activation_email(email: str, token: str):
-    print(f"Activation sent to {email}")
+    print(f"Activation token sent to {email}: {token}")
 
 
 @router.post(
