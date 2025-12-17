@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.config import settings
+from src.core.config import settings
 from src.models.user import RefreshToken, ActivationToken, PasswordResetToken
 
 

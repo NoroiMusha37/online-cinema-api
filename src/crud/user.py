@@ -3,7 +3,7 @@ from pydantic import EmailStr
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.security import hash_password
+from src.core.security import hash_password
 from src.models.user import User, UserGroup, UserGroupEnum, UserProfile
 from src.schemas.user import UserCreate, UserProfileCreate, UserProfileUpdate, UserUpdateAdmin
 

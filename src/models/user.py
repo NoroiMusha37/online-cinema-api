@@ -7,7 +7,7 @@ from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.testing.schema import mapped_column
 
-from src.config.database import Base
+from src.core.database import Base
 
 
 class UserGroupEnum(str, Enum):
