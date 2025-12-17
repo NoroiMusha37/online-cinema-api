@@ -30,7 +30,7 @@ def create_token(data: dict, expires_delta: timedelta):
 
 def create_access_token(user_id: int):
     return create_token(
-        data={"sub": user_id, "type": "access"},
+        data={"sub": str(user_id), "type": "access"},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
