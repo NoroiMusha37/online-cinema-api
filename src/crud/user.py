@@ -55,9 +55,8 @@ async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
 
     session.add(user)
     await session.commit()
-    await session.refresh(user)
 
-    return user
+    return await get_user_by_id(user_id=user.id, session=session)
 
 
 async def get_profile_by_user_id(
