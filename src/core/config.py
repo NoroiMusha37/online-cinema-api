@@ -32,5 +32,16 @@ class Settings(BaseSettings):
     ACCOUNT_ACTIVATION_HOURS: int = 24
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
+
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int
+    MAIL_SERVER: str
+    MAIL_FROM_NAME: str
+
+    DOMAIN: str
 
 settings = Settings()

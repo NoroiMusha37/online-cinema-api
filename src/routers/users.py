@@ -10,16 +10,19 @@ from src.core.database import get_db
 from src.core.deps import get_current_active_user
 from src.core.security import hash_password, verify_password
 from src.models.user import User
-from src.schemas.user import UserRead, UserProfileRead, UserProfileUpdate, PasswordResetRequest, PasswordResetConfirm, \
-    UserPasswordChange
+from src.schemas.user import (
+    UserRead,
+    UserProfileRead,
+    UserProfileUpdate,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    UserPasswordChange,
+)
 from src.crud import user as user_crud
 from src.crud import token as token_crud
+from src.tasks.email_tasks import send_reset_password_email_task
 
 router = APIRouter(prefix="/users")
-
-
-def send_reset_email(email: str, token: str):
-    print(f"Reset token sent to {email}: {token}")
 
 
 @router.get("/me", response_model=UserRead)
@@ -95,7 +98,7 @@ async def password_reset_request(
         token=token_str,
         session=session
     )
-    background_tasks.add_task(send_reset_email, str(user.email), token_str)
+    send_reset_password_email_task.delay(str(user.email), token_str)
 
     return {"message": "Password reset email sent"}
 

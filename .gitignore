@@ -3,3 +3,4 @@
 __pycache__
 .env
 cinema.db
+celerybeat-schedule

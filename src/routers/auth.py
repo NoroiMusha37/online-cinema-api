@@ -13,11 +13,9 @@ from src.models.user import User
 from src.schemas.user import UserRead, UserCreate, Token
 from src.crud import user as user_crud
 from src.crud import token as token_crud
+from src.tasks.email_tasks import send_activation_email_task
 
 router = APIRouter(prefix="/auth")
-
-def send_activation_email(email: str, token: str):
-    print(f"Activation token sent to {email}: {token}")
 
 
 @router.post(
@@ -37,7 +35,7 @@ async def register(
         session=session,
     )
 
-    background_tasks.add_task(send_activation_email, user.email, token_str)
+    send_activation_email_task.delay(str(user.email), token_str)
     return user
 
 
