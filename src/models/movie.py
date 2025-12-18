@@ -41,14 +41,18 @@ class Genre(Base):
     __tablename__ = "genres"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    movies: Mapped[List["Movie"]] = relationship(secondary=movie_genres, back_populates="genres")
+    movies: Mapped[List["Movie"]] = relationship(
+        secondary=movie_genres, back_populates="genres"
+    )
 
 
 class Star(Base):
     __tablename__ = "stars"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    movies: Mapped[List["Movie"]] = relationship(secondary=movie_stars, back_populates="stars")
+    movies: Mapped[List["Movie"]] = relationship(
+        secondary=movie_stars, back_populates="stars"
+    )
 
 
 class Director(Base):
@@ -109,6 +113,10 @@ class Movie(Base):
     favorited: Mapped[List["User"]] = relationship(
         secondary="user_favourites", back_populates="favorites"
     )
+
+    @property
+    def certification_name(self) -> str:
+        return self.certification.name
 
     __table_args__ = (
         UniqueConstraint(
