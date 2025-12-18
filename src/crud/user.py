@@ -59,6 +59,18 @@ async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
     return await get_user_by_id(user_id=user.id, session=session)
 
 
+async def update_password(
+        user_id: int,
+        new_password: str,
+        session: AsyncSession
+) -> None:
+    await session.execute(update(User)
+                          .where(User.id == user_id)
+                          .values(hashed_password=new_password)
+                          )
+    await session.commit()
+
+
 async def get_profile_by_user_id(
         user_id: int, session: AsyncSession
 ) -> UserProfile | None:

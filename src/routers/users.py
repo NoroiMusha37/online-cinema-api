@@ -8,9 +8,10 @@ from starlette import status
 
 from src.core.database import get_db
 from src.core.deps import get_current_active_user
-from src.core.security import hash_password
+from src.core.security import hash_password, verify_password
 from src.models.user import User
-from src.schemas.user import UserRead, UserProfileRead, UserProfileUpdate, PasswordResetRequest, PasswordResetConfirm
+from src.schemas.user import UserRead, UserProfileRead, UserProfileUpdate, PasswordResetRequest, PasswordResetConfirm, \
+    UserPasswordChange
 from src.crud import user as user_crud
 from src.crud import token as token_crud
 
@@ -39,6 +40,31 @@ async def update_my_profile(
         profile_in=profile_in,
         session=session
     )
+
+
+@router.post("/password-reset")
+async def password_reset(
+        payload: UserPasswordChange,
+        session: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_active_user)
+):
+    if not verify_password(
+            payload.current_password, current_user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect password",
+        )
+
+    new_password = hash_password(payload.new_password)
+
+    await user_crud.update_password(
+        user_id=current_user.id,
+        new_password=new_password,
+        session=session
+    )
+
+    return {"message": "Password reset successful"}
 
 
 @router.post("/password-reset/request")

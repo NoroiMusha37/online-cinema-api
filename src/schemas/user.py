@@ -53,6 +53,11 @@ class UserRead(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserPasswordChange(BaseModel):
+    current_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8)
+
+
 class UserUpdateAdmin(BaseModel):
     group_id: Optional[int] = None
     is_active: Optional[bool] = None
