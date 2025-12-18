@@ -68,6 +68,16 @@ class User(Base):
     refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
     )
+    likes: Mapped[List["Like"]] = relationship("Like", back_populates="user")
+    comments: Mapped[List["Comment"]] = relationship(
+        "Comment", back_populates="user"
+    )
+    ratings: Mapped[List["Rating"]] = relationship(
+        "Rating", back_populates="user"
+    )
+    favourites: Mapped[List["Movie"]] = relationship(
+        secondary="user_favorites", back_populates="favorited"
+    )
 
 
 class UserProfile(Base):
