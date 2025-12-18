@@ -24,6 +24,6 @@ celery_app.conf.imports = [
 celery_app.conf.beat_schedule = {
     "cleanup-every-hour": {
         "task": "cleanup_expired_tokens",
-        "schedule": 10
+        "schedule": 3600
     }
 }
