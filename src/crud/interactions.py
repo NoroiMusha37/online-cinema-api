@@ -5,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.interactions import Like, Comment, Rating
 from src.models.movie import user_favorites
-from src.schemas.interactions import CommentCreate, RatingCreate
+from src.schemas.interactions import CommentCreate, RatingCreate, LikeCreate
 
 
 async def upsert_like(
         movie_id: int,
         user_id: int,
-        liked: bool,
+        liked: LikeCreate,
         session: AsyncSession
 ) -> Like:
     stmt = select(Like).where(
@@ -20,18 +20,30 @@ async def upsert_like(
     result = await session.execute(stmt)
     like = result.scalar_one_or_none()
     if like:
-        like.like = liked
+        like.like = liked.liked
     else:
         like = Like(
             movie_id=movie_id,
             user_id=user_id,
-            like=liked
+            like=liked.liked
         )
         session.add(like)
 
     await session.commit()
     await session.refresh(like)
     return like
+
+
+async def delete_like(
+        movie_id: int,
+        user_id: int,
+        session: AsyncSession
+) -> None:
+    await session.execute(delete(Like).where(
+        and_(Like.movie_id == movie_id, Like.user_id == user_id)
+    )
+    )
+    await session.commit()
 
 
 async def create_comment(
@@ -51,6 +63,23 @@ async def create_comment(
     await session.commit()
     await session.refresh(new_comment)
     return new_comment
+
+
+async def delete_comment(
+        comment_id: int,
+        user_id: int,
+        session: AsyncSession
+) -> bool:
+    result = await session.execute(delete(Comment).where(
+        and_(Comment.id == comment_id, Comment.user_id == user_id)
+    )
+    )
+
+    if result.rowcount > 0:
+        await session.commit()
+        return True
+
+    return False
 
 
 async def get_comments_by_movie(

@@ -1,12 +1,20 @@
 import uuid
 from typing import Tuple, Sequence
 
-from sqlalchemy import Select, or_, func, select
+from sqlalchemy import Select, or_, func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from src.models.movie import Movie, Director, Star, Genre, movie_genres
+from src.models.movie import (
+    Movie,
+    Director,
+    Star,
+    Genre,
+    movie_genres,
+    user_favorites
+)
 from src.schemas.movie import MovieQueryParameters, SortOptions
+from src.models.interactions import Like
 
 
 def apply_filters(stmt: Select, params: MovieQueryParameters) -> Select:
@@ -67,14 +75,14 @@ def apply_filters(stmt: Select, params: MovieQueryParameters) -> Select:
     return stmt
 
 
-async def get_movies(
-        params: MovieQueryParameters, session: AsyncSession
+async def filter_movies(
+        stmt: Select, params: MovieQueryParameters, session: AsyncSession
 ) -> Tuple[Sequence[Movie], int]:
-    stmt: Select = select(Movie)
     filtered_stmt = apply_filters(stmt, params)
-    result_count = await session.execute(select(func.count())
-                                         .select_from(filtered_stmt.subquery())
-                                         )
+
+    result_count = await session.execute(
+        select(func.count()).select_from(filtered_stmt.subquery())
+    )
     count = result_count.scalar_one()
 
     data_stmt = (
@@ -83,14 +91,20 @@ async def get_movies(
         .limit(params.size)
         .options(
             joinedload(Movie.certification),
-            selectinload(Movie.genres)
+            selectinload(Movie.genres),
         )
     )
 
     result = await session.execute(data_stmt)
     movies = result.scalars().all()
-
     return movies, count
+
+
+async def get_movies(
+        params: MovieQueryParameters, session: AsyncSession
+) -> Tuple[Sequence[Movie], int]:
+    stmt = select(Movie)
+    return await filter_movies(stmt, params, session)
 
 
 async def get_movie_by_uuid(
@@ -120,8 +134,6 @@ async def get_movie_by_id(
         .options(
             joinedload(Movie.certification),
             selectinload(Movie.genres),
-            selectinload(Movie.stars),
-            selectinload(Movie.directors),
         )
     )
 
@@ -129,7 +141,11 @@ async def get_movie_by_id(
     return result.scalar_one_or_none()
 
 
-async def get_genres_with_counts(session: AsyncSession):
+async def get_genres_with_counts(
+        page: int,
+        size: int,
+        session: AsyncSession
+):
     stmt = (
         select(
             Genre.id,
@@ -141,5 +157,45 @@ async def get_genres_with_counts(session: AsyncSession):
         .order_by(Genre.name)
     )
 
+    result_count = await session.execute(select(func.count())
+                                         .select_from(stmt.subquery())
+                                         )
+    count = result_count.scalar_one()
+
+    offset = (page - 1) * size
+    stmt = stmt.offset(offset).limit(size)
     result = await session.execute(stmt)
-    return result.all()
+    genres = result.mappings().all()
+
+    return genres, count
+
+
+async def get_user_favorites(
+        user_id: int,
+        params: MovieQueryParameters,
+        session: AsyncSession
+) -> Tuple[Sequence[Movie], int]:
+    stmt = (
+        select(Movie)
+        .join(user_favorites, Movie.id == user_favorites.c.movie_id)
+        .where(user_favorites.c.user_id == user_id)
+    )
+
+    return await filter_movies(stmt, params, session)
+
+
+async def get_user_like_movies(
+        user_id: int,
+        liked: bool,
+        params: MovieQueryParameters,
+        session: AsyncSession
+) -> Tuple[Sequence[Movie], int]:
+    stmt = (
+        select(Movie)
+        .join(Like, Movie.id == Like.movie_id)
+        .where(
+            and_(Like.user_id == user_id, Like.like == liked)
+        )
+    )
+
+    return await filter_movies(stmt, params, session)
