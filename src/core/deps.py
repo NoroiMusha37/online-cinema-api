@@ -1,4 +1,7 @@
+import uuid
+
 from jose import jwt, JWTError
+from sqlalchemy import select
 from starlette import status
 
 from fastapi import Depends, HTTPException
@@ -8,11 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.core.database import get_db
+from src.models.movie import Movie
 from src.models.user import User, UserGroupEnum
 from src.schemas.user import TokenPayload
 import src.crud.user as user_crud
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 async def get_current_user(
@@ -70,3 +74,18 @@ async def get_current_admin(
             detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+async def convert_movie_uuid_to_id(
+        movie_uuid: uuid.UUID,
+        session: AsyncSession = Depends(get_db)
+) -> int:
+    result = await session.execute(select(Movie.id)
+                                  .where(Movie.uuid == movie_uuid))
+    movie_id = result.scalar_one_or_none()
+    if not movie_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Movie not found",
+        )
+    return movie_id
