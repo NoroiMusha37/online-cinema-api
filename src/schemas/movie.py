@@ -3,7 +3,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from fastapi import Query
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseResponse(BaseModel):
@@ -26,11 +27,11 @@ class GenreResponse(BaseResponse):
 
 
 class GenreWithCount(BaseResponse):
-    count: int
+    movie_count: int
 
 
 class GenreList(BasePagination):
-    genres: List[GenreWithCount]
+    items: List[GenreWithCount]
 
 
 class StarResponse(BaseResponse):
@@ -74,7 +75,7 @@ class MovieDetail(MovieBase):
 
 
 class MoviePage(BasePagination):
-    movies: List[MovieList]
+    items: List[MovieList]
 
 
 class SortOptions(str, Enum):
@@ -94,22 +95,39 @@ class SortOptions(str, Enum):
     PRICE_DESC = "price_desc"
 
 
-class MovieQueryParameters(BaseModel):
-    page: int = Field(1, ge=1)
-    size: int = Field(20, ge=1, le=100)
-    search: Optional[str] = None
-    genre_ids: Optional[List[int]] = Field(None, alias="genre")
-    year_from: Optional[int] = Field(None, ge=1888)
-    year_to: Optional[int] = Field(None, ge=1888)
-    min_time: Optional[int] = Field(None, ge=1)
-    max_time: Optional[int] = Field(None, ge=1)
-    min_imdb: Optional[float] = Field(None, ge=0, le=10)
-    min_votes: Optional[int] = Field(None, ge=0)
-    min_meta_score: Optional[int] = Field(None, ge=0, le=100)
-    price_from: Optional[Decimal] = Field(None, ge=0)
-    price_to: Optional[Decimal] = Field(None, ge=0)
-    sort_by: SortOptions = Field(SortOptions.YEAR_DESC)
+class MovieQueryParameters:
+    def __init__(
+        self,
+        page: int = Query(1, ge=1),
+        size: int = Query(20, ge=1, le=100),
+        search: Optional[str] = Query(None),
+        genre_ids: Optional[List[int]] = Query(None, alias="genre"),
+        year_from: Optional[int] = Query(None, ge=1888),
+        year_to: Optional[int] = Query(None, ge=1888),
+        min_time: Optional[int] = Query(None, ge=1),
+        max_time: Optional[int] = Query(None, ge=1),
+        min_imdb: Optional[float] = Query(None, ge=0, le=10),
+        min_votes: Optional[int] = Query(None, ge=0),
+        min_meta_score: Optional[int] = Query(None, ge=0, le=100),
+        price_from: Optional[Decimal] = Query(None, ge=0),
+        price_to: Optional[Decimal] = Query(None, ge=0),
+        sort_by: SortOptions = Query(SortOptions.YEAR_DESC),
+    ):
+        self.page = page
+        self.size = size
+        self.search = search
+        self.genre_ids = genre_ids
+        self.year_from = year_from
+        self.year_to = year_to
+        self.min_time = min_time
+        self.max_time = max_time
+        self.min_imdb = min_imdb
+        self.min_votes = min_votes
+        self.min_meta_score = min_meta_score
+        self.price_from = price_from
+        self.price_to = price_to
+        self.sort_by = sort_by
 
-    @computed_field
+    @property
     def offset(self) -> int:
         return (self.page - 1) * self.size
