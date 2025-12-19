@@ -75,7 +75,7 @@ class User(Base):
     ratings: Mapped[List["Rating"]] = relationship(
         "Rating", back_populates="user"
     )
-    favourites: Mapped[List["Movie"]] = relationship(
+    favorites: Mapped[List["Movie"]] = relationship(
         secondary="user_favorites", back_populates="favorited"
     )
 

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Optional, List
-import uuid
+import uuid as uuid_lib
 
 from sqlalchemy import ForeignKey, Table, Column, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -76,7 +76,9 @@ class Certification(Base):
 class Movie(Base):
     __tablename__ = "movies"
     id: Mapped[int] = mapped_column(primary_key=True)
-    uuid: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, unique=True)
+    uuid: Mapped[uuid_lib.UUID] = mapped_column(
+        default=uuid_lib.uuid4, unique=True
+    )
     name: Mapped[str]
     year: Mapped[int]
     time: Mapped[int]
@@ -111,7 +113,7 @@ class Movie(Base):
         "Rating", back_populates="movie"
     )
     favorited: Mapped[List["User"]] = relationship(
-        secondary="user_favourites", back_populates="favorites"
+        secondary="user_favorites", back_populates="favorites"
     )
 
     @property

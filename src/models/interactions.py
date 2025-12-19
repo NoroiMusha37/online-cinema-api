@@ -60,5 +60,5 @@ class Rating(Base):
     __table_args__ = (
         CheckConstraint(
             "score >= 1 AND score <= 10", name="check_score_range"
-        )
+        ),
     )
