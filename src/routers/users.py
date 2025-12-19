@@ -10,6 +10,7 @@ from src.core.database import get_db
 from src.core.deps import get_current_active_user
 from src.core.security import hash_password, verify_password
 from src.models.user import User
+from src.schemas.movie import MoviePage, MovieQueryParameters
 from src.schemas.user import (
     UserRead,
     UserProfileRead,
@@ -20,7 +21,9 @@ from src.schemas.user import (
 )
 from src.crud import user as user_crud
 from src.crud import token as token_crud
+from src.crud import movie as movie_crud
 from src.tasks.email_tasks import send_reset_password_email_task
+from src.utils.pagination import paginate
 
 router = APIRouter(prefix="/users")
 
@@ -139,3 +142,45 @@ async def password_reset_confirm(
     )
 
     return {"message": "Password updated successfully"}
+
+
+@router.get("/me/favorites", response_model=MoviePage)
+async def get_favorites(
+        current_user: User = Depends(get_current_active_user),
+        params: MovieQueryParameters = Depends(),
+        session: AsyncSession = Depends(get_db)
+):
+    favorites, count = await movie_crud.get_user_favorites(
+        user_id=current_user.id,
+        params=params,
+        session=session
+    )
+
+    return paginate(
+        items=favorites,
+        count=count,
+        page=params.page,
+        size=params.size,
+    )
+
+
+@router.get("/me/likes", response_model=MoviePage)
+async def get_likes(
+        liked: bool,
+        current_user: User = Depends(get_current_active_user),
+        params: MovieQueryParameters = Depends(),
+        session: AsyncSession = Depends(get_db)
+):
+    likes, count = await movie_crud.get_user_like_movies(
+        user_id=current_user.id,
+        params=params,
+        session=session,
+        liked=liked
+    )
+
+    return paginate(
+        items=likes,
+        count=count,
+        page=params.page,
+        size=params.size,
+    )
