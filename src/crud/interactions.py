@@ -3,47 +3,32 @@ from typing import Tuple, Sequence
 from sqlalchemy import and_, select, func, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.interactions import MovieLike, Comment, Rating
+from src.models.interactions import Comment, Rating, MovieLike, CommentLike
 from src.models.movie import user_favorites
-from src.schemas.interactions import CommentCreate, RatingCreate, LikeCreate
+from src.schemas.interactions import (
+    CommentCreate,
+    RatingCreate,
+    LikeCreate,
+    LikeResponse
+)
+from .commons import toggle_generic_like
 
 
-async def upsert_like(
+async def toggle_movie_like(
         movie_id: int,
         user_id: int,
         liked: LikeCreate,
         session: AsyncSession
-) -> MovieLike:
-    stmt = select(MovieLike).where(
-        and_(MovieLike.movie_id == movie_id, MovieLike.user_id == user_id)
-    )
-    result = await session.execute(stmt)
-    like = result.scalar_one_or_none()
-    if like:
-        like.like = liked.liked
-    else:
-        like = MovieLike(
-            movie_id=movie_id,
-            user_id=user_id,
-            like=liked.liked
-        )
-        session.add(like)
+) -> LikeResponse:
 
-    await session.commit()
-    await session.refresh(like)
-    return like
-
-
-async def delete_like(
-        movie_id: int,
-        user_id: int,
-        session: AsyncSession
-) -> None:
-    await session.execute(delete(MovieLike).where(
-        and_(MovieLike.movie_id == movie_id, MovieLike.user_id == user_id)
+    return await toggle_generic_like(
+        entity_id=movie_id,
+        user_id=user_id,
+        liked=liked,
+        Model=MovieLike,
+        id_field_name="movie_id",
+        session=session
     )
-    )
-    await session.commit()
 
 
 async def create_comment(
@@ -161,3 +146,20 @@ async def toggle_favorite(
     await session.execute(stmt)
     await session.commit()
     return True
+
+
+async def toggle_comment_like(
+        comment_id: int,
+        user_id: int,
+        liked: LikeCreate,
+        session: AsyncSession
+) -> LikeResponse:
+
+    return await toggle_generic_like(
+        entity_id=comment_id,
+        user_id=user_id,
+        liked=liked,
+        Model=CommentLike,
+        id_field_name="comment_id",
+        session=session
+    )
