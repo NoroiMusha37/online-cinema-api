@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
-import asyncio
 
 from celery import shared_task
 from sqlalchemy import delete
 
 from src.core.database import SessionLocal
-from src.models.user import ActivationToken
+from src.models import ActivationToken
+from .commons import run_async_task
 
 
 async def cleanup():
@@ -20,5 +20,4 @@ async def cleanup():
 
 @shared_task(name="cleanup_expired_tokens")
 def cleanup_expired_tokens():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(cleanup())
+    run_async_task(cleanup())

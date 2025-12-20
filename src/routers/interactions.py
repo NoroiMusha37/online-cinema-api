@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.core.database import get_db
 from src.core.deps import get_current_user, convert_movie_uuid_to_id
+from src.models.interactions import Comment
 from src.models.user import User
 from src.schemas.interactions import (
     LikeCreate,
@@ -13,6 +16,7 @@ from src.schemas.interactions import (
     RatingCreate
 )
 from src.crud import interactions as inter_crud
+from src.tasks.email_tasks import send_comment_notification_email_task
 
 router = APIRouter(prefix="/movies")
 
@@ -39,12 +43,33 @@ async def create_comment(
         current_user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_db),
 ):
-    return await inter_crud.create_comment(
+    new_comment = await inter_crud.create_comment(
         movie_id=movie_id,
         user_id=current_user.id,
         comment=comment_in,
         session=session
     )
+
+    if comment_in.parent_id:
+        stmt = (
+            select(Comment)
+            .options(
+                selectinload(Comment.user),
+                selectinload(Comment.movie)
+            )
+            .where(Comment.id == comment_in.parent_id)
+        )
+        result = await session.execute(stmt)
+        parent_comment = result.scalar_one_or_none()
+
+        if parent_comment and parent_comment.user_id != current_user.id:
+            send_comment_notification_email_task.delay(
+                parent_comment.user.email,
+                comment_in.parent_id,
+                parent_comment.movie.name
+            )
+
+    return new_comment
 
 
 @router.delete("/comments/{comment_id}")

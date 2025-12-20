@@ -1,9 +1,13 @@
 from celery import shared_task
-from fastapi_mail import ConnectionConfig, MessageSchema
-from fastapi_mail import FastMail
-import asyncio
+from fastapi_mail import (
+    ConnectionConfig,
+    MessageSchema,
+    FastMail,
+    MessageType
+)
 
 from src.core.config import settings
+from .commons import run_async_task
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -20,7 +24,6 @@ conf = ConnectionConfig(
 
 
 async def send_email(email_to: str, subject: str, body: str):
-    from fastapi_mail import MessageType
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
@@ -32,27 +35,47 @@ async def send_email(email_to: str, subject: str, body: str):
     await fm.send_message(message)
 
 
-@shared_task(name="send_activation_email_task")
-def send_activation_email_task(email: str, token: str):
+@shared_task(
+    name="send_activation_email_task",
+    bind=True,
+    max_retries=5,
+    default_retry_delay=300
+)
+def send_activation_email_task(self, email: str, token: str):
     body = f"""
     <h1>Activation Email</h1>
     <p>Your activation token: {token}
     """
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(send_email(
+    run_async_task(send_email(
         email, "Activate Account [Online Cinema]", body
-    )
-    )
+    ))
 
 
-@shared_task(name="send_reset_password_email_task")
-def send_reset_password_email_task(email: str, token: str):
+@shared_task(
+    name="send_reset_password_email_task",
+    bind=True,
+    max_retries=5,
+    default_retry_delay=300
+)
+def send_reset_password_email_task(self, email: str, token: str):
     body = f"""
     <h1>Reset Password Email</h1>
     <p>Your token is: <b>{token}</b></p>
     """
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(send_email(
-        email, "Reset Password [Online Cinema]", body
-    )
-    )
+    run_async_task(send_email(email, "Reset Password [Online Cinema]", body))
+
+
+@shared_task(
+    name="send_comment_notification_email_task",
+    bind=True,
+    max_retries=5,
+    default_retry_delay=300
+)
+def send_comment_notification_email_task(
+        self, email: str, comment_id: int, movie_name: str
+):
+    body = f"""
+    <h1>Someone Replied To Your Comment</h1>
+    <p>Your comment {comment_id} under the movie {movie_name} got a reply</p>
+    """
+    run_async_task(send_email(email, "New Reply! [Online Cinema]", body))
