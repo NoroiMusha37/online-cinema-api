@@ -103,8 +103,8 @@ class Movie(Base):
     stars: Mapped[List[Star]] = relationship(
         secondary=movie_stars, back_populates="movies"
     )
-    likes: Mapped[List["Like"]] = relationship(
-        "Like", back_populates="movie"
+    likes: Mapped[List["MovieLike"]] = relationship(
+        "MovieLike", back_populates="movie"
     )
     comments: Mapped[List["Comment"]] = relationship(
         "Comment", back_populates="movie"

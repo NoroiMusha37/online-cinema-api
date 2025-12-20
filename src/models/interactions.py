@@ -9,7 +9,7 @@ from src.core.database import Base
 
 
 class MovieLike(Base):
-    __tablename__ = "likes"
+    __tablename__ = "movies_likes"
     like: Mapped[bool]
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"), primary_key=True
@@ -18,7 +18,7 @@ class MovieLike(Base):
         ForeignKey("movies.id"), primary_key=True
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="likes")
+    user: Mapped["User"] = relationship("User", back_populates="movies_likes")
     movie: Mapped["Movie"] = relationship("Movie", back_populates="likes")
 
 
@@ -68,8 +68,8 @@ class Rating(Base):
 
 
 class CommentLike(Base):
-    __tablename__ = "comment_likes"
-    liked: Mapped[bool]
+    __tablename__ = "comments_likes"
+    like: Mapped[bool]
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"), primary_key=True
     )
@@ -80,4 +80,6 @@ class CommentLike(Base):
     user: Mapped["User"] = relationship(
         "User", back_populates="comments_likes"
     )
-    comment: Mapped["Comment"] = relationship("Comment", back_populates="likes")
+    comment: Mapped["Comment"] = relationship(
+        "Comment", back_populates="likes"
+    )
