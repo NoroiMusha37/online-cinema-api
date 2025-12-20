@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from src.core.database import SessionLocal
 from src.models.user import User, UserGroup, UserGroupEnum
 from src.models.movie import Movie, Genre, Star, Director, Certification, user_favorites
-from src.models.interactions import Like, Comment, Rating
+from src.models.interactions import MovieLike, Comment, Rating
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -125,7 +125,7 @@ async def seed():
         for movie in movies_list[:10]:
             # Like
             if random.choice([True, False]):
-                session.add(Like(user_id=user1.id, movie_id=movie.id, like=True))
+                session.add(MovieLike(user_id=user1.id, movie_id=movie.id, like=True))
 
             # Comment
             if random.choice([True, False]):

@@ -8,7 +8,7 @@ from sqlalchemy.testing.schema import mapped_column
 from src.core.database import Base
 
 
-class Like(Base):
+class MovieLike(Base):
     __tablename__ = "likes"
     like: Mapped[bool]
     user_id: Mapped[int] = mapped_column(
@@ -42,6 +42,9 @@ class Comment(Base):
     replies: Mapped[List["Comment"]] = relationship(
         "Comment", back_populates="parent"
     )
+    likes: Mapped[List["CommentLike"]] = relationship(
+        "CommentLike", back_populates="comment"
+    )
 
 
 class Rating(Base):
@@ -62,3 +65,19 @@ class Rating(Base):
             "score >= 1 AND score <= 10", name="check_score_range"
         ),
     )
+
+
+class CommentLike(Base):
+    __tablename__ = "comment_likes"
+    liked: Mapped[bool]
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), primary_key=True
+    )
+    comment_id: Mapped[int] = mapped_column(
+        ForeignKey("comments.id"), primary_key=True
+    )
+
+    user: Mapped["User"] = relationship(
+        "User", back_populates="comments_likes"
+    )
+    comment: Mapped["Comment"] = relationship("Comment", back_populates="likes")

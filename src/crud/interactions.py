@@ -3,7 +3,7 @@ from typing import Tuple, Sequence
 from sqlalchemy import and_, select, func, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.interactions import Like, Comment, Rating
+from src.models.interactions import MovieLike, Comment, Rating
 from src.models.movie import user_favorites
 from src.schemas.interactions import CommentCreate, RatingCreate, LikeCreate
 
@@ -13,16 +13,16 @@ async def upsert_like(
         user_id: int,
         liked: LikeCreate,
         session: AsyncSession
-) -> Like:
-    stmt = select(Like).where(
-        and_(Like.movie_id == movie_id, Like.user_id == user_id)
+) -> MovieLike:
+    stmt = select(MovieLike).where(
+        and_(MovieLike.movie_id == movie_id, MovieLike.user_id == user_id)
     )
     result = await session.execute(stmt)
     like = result.scalar_one_or_none()
     if like:
         like.like = liked.liked
     else:
-        like = Like(
+        like = MovieLike(
             movie_id=movie_id,
             user_id=user_id,
             like=liked.liked
@@ -39,8 +39,8 @@ async def delete_like(
         user_id: int,
         session: AsyncSession
 ) -> None:
-    await session.execute(delete(Like).where(
-        and_(Like.movie_id == movie_id, Like.user_id == user_id)
+    await session.execute(delete(MovieLike).where(
+        and_(MovieLike.movie_id == movie_id, MovieLike.user_id == user_id)
     )
     )
     await session.commit()

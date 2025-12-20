@@ -68,7 +68,7 @@ class User(Base):
     refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
     )
-    likes: Mapped[List["Like"]] = relationship("Like", back_populates="user")
+    movies_likes: Mapped[List["Like"]] = relationship("Like", back_populates="user")
     comments: Mapped[List["Comment"]] = relationship(
         "Comment", back_populates="user"
     )
@@ -77,6 +77,9 @@ class User(Base):
     )
     favorites: Mapped[List["Movie"]] = relationship(
         secondary="user_favorites", back_populates="favorited"
+    )
+    comments_likes: Mapped[List["CommentLike"]] = relationship(
+        "CommentLike", back_populates="user"
     )
 
 

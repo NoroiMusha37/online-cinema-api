@@ -14,7 +14,7 @@ from src.models.movie import (
     user_favorites
 )
 from src.schemas.movie import MovieQueryParameters, SortOptions
-from src.models.interactions import Like
+from src.models.interactions import MovieLike
 
 
 def apply_filters(stmt: Select, params: MovieQueryParameters) -> Select:
@@ -192,9 +192,9 @@ async def get_user_like_movies(
 ) -> Tuple[Sequence[Movie], int]:
     stmt = (
         select(Movie)
-        .join(Like, Movie.id == Like.movie_id)
+        .join(MovieLike, Movie.id == MovieLike.movie_id)
         .where(
-            and_(Like.user_id == user_id, Like.like == liked)
+            and_(MovieLike.user_id == user_id, MovieLike.like == liked)
         )
     )
 
