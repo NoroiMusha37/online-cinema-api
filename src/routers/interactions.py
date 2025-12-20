@@ -5,7 +5,13 @@ from starlette import status
 from src.core.database import get_db
 from src.core.deps import get_current_user, convert_movie_uuid_to_id
 from src.models.user import User
-from src.schemas.interactions import LikeCreate, CommentResponse, CommentCreate, RatingResponse, RatingCreate
+from src.schemas.interactions import (
+    LikeCreate,
+    CommentResponse,
+    CommentCreate,
+    RatingResponse,
+    RatingCreate
+)
 from src.crud import interactions as inter_crud
 
 router = APIRouter(prefix="/movies")
@@ -18,26 +24,12 @@ async def like_movie(
         current_user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_db)
 ):
-    return await inter_crud.upsert_like(
+    return await inter_crud.toggle_movie_like(
         movie_id=movie_id,
         user_id=current_user.id,
         liked=like_in,
         session=session
     )
-
-
-@router.delete("/{uuid}/like")
-async def delete_like(
-        movie_id: int = Depends(convert_movie_uuid_to_id),
-        current_user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(get_db)
-):
-    await inter_crud.delete_like(
-        movie_id=movie_id,
-        user_id=current_user.id,
-        session=session
-    )
-    return {"message": "Like/dislike removed"}
 
 
 @router.post("/{uuid}/comments", response_model=CommentResponse)
@@ -103,3 +95,18 @@ async def favorite_movie(
         return {"message": "Movie removed from favorites"}
 
     return {"message": "Movie added to favorites"}
+
+
+@router.post("/comments/{comment_id}/like")
+async def like_comment(
+        like_in: LikeCreate,
+        comment_id: int,
+        user: User = Depends(get_current_user),
+        session: AsyncSession = Depends(get_db),
+):
+    return await inter_crud.toggle_comment_like(
+        comment_id=comment_id,
+        user_id=user.id,
+        liked=like_in,
+        session=session
+    )
