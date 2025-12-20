@@ -41,36 +41,8 @@ class MovieUpdate(BaseModel):
 
 class NamedEntity(BaseModel):
     name: str
+
+
+class NamedEntityResponse(NamedEntity):
+    id: int
     model_config = ConfigDict(from_attributes=True)
-
-
-class GenreCreate(NamedEntity):
-    pass
-
-
-class GenreUpdate(NamedEntity):
-    pass
-
-
-class StarCreate(NamedEntity):
-    pass
-
-
-class StarUpdate(NamedEntity):
-    pass
-
-
-class DirectorCreate(NamedEntity):
-    pass
-
-
-class DirectorUpdate(NamedEntity):
-    pass
-
-
-class CertificationCreate(NamedEntity):
-    pass
-
-
-class CertificationUpdate(NamedEntity):
-    pass

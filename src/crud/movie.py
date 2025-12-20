@@ -122,7 +122,6 @@ async def get_user_liked_comments(
         size: int,
         session: AsyncSession
 ) -> Tuple[Sequence[Comment], int]:
-
     count = await session.execute(select(func.count()).where(
         and_(CommentLike.user_id == user_id, CommentLike.like == liked)
     )

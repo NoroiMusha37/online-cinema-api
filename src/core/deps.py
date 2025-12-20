@@ -76,6 +76,17 @@ async def get_current_admin(
     return current_user
 
 
+async def get_current_moderator(
+        current_user: User = Depends(get_current_active_user),
+) -> User:
+    if current_user.group.name == UserGroupEnum.USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+
 async def convert_movie_uuid_to_id(
         movie_uuid: uuid.UUID,
         session: AsyncSession = Depends(get_db)
