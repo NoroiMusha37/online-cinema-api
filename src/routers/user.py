@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, Query
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -10,6 +10,7 @@ from src.core.database import get_db
 from src.core.deps import get_current_active_user
 from src.core.security import hash_password, verify_password
 from src.models.user import User
+from src.schemas.interactions import CommentPage, RatingPage
 from src.schemas.movie import MoviePage, MovieQueryParameters
 from src.schemas.user import (
     UserRead,
@@ -161,17 +162,18 @@ async def get_favorites(
         count=count,
         page=params.page,
         size=params.size,
+        path="/users/me/favorites/"
     )
 
 
-@router.get("/me/likes", response_model=MoviePage)
-async def get_likes(
+@router.get("/me/movie-likes", response_model=MoviePage)
+async def get_movie_likes(
         liked: bool,
         current_user: User = Depends(get_current_active_user),
         params: MovieQueryParameters = Depends(),
         session: AsyncSession = Depends(get_db)
 ):
-    likes, count = await movie_crud.get_user_like_movies(
+    likes, count = await movie_crud.get_user_liked_movies(
         user_id=current_user.id,
         params=params,
         session=session,
@@ -183,4 +185,52 @@ async def get_likes(
         count=count,
         page=params.page,
         size=params.size,
+        path="/users/me/movie-likes/"
+    )
+
+
+@router.get("/me/comment-likes", response_model=CommentPage)
+async def get_comment_likes(
+        liked: bool,
+        page: int = Query(1, ge=1),
+        size: int = Query(20, ge=1, le=100),
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_db)
+):
+    comments, count = await movie_crud.get_user_liked_comments(
+        user_id=current_user.id,
+        liked=liked,
+        page=page,
+        size=size,
+        session=session
+    )
+
+    return paginate(
+        items=comments,
+        count=count,
+        page=page,
+        size=size,
+        path="/users/me/comment-likes/"
+    )
+
+
+@router.get("/me/ratings", response_model=RatingPage)
+async def get_ratings(
+        page: int = Query(1, ge=1),
+        size: int = Query(20, ge=1, le=100),
+        user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_db)
+):
+    ratings, count = await movie_crud.get_user_rated_movies(
+        user_id=user.id,
+        page=page,
+        size=size,
+        session=session
+    )
+    return paginate(
+        items=ratings,
+        count=count,
+        page=page,
+        size=size,
+        path="/users/me/ratings/"
     )

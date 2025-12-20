@@ -25,6 +25,7 @@ async def get_movies(
         count=count,
         page=params.page,
         size=params.size,
+        path="/movies/"
     )
 
 
@@ -43,6 +44,7 @@ async def get_genres(
         count=count,
         page=page,
         size=size,
+        path="/movies/genres/"
     )
 
 
@@ -79,13 +81,11 @@ async def get_comments(
     comments, count = await inter_crud.get_comments_by_movie(
         movie_id=movie_id, page=page, size=size, session=session
     )
-    total_pages = (count + size - 1) // size
 
-    return {
-        "comments": comments,
-        "prev_page": f"/comments?page={page - 1}" if page > 1 else None,
-        "next_page": f"/comments?page={page + 1}"
-        if page < total_pages else None,
-        "total_pages": total_pages,
-        "total_items": count,
-    }
+    return paginate(
+        items=comments,
+        count=count,
+        page=page,
+        size=size,
+        path="/movies/genres/{uuid}/comments/"
+    )
