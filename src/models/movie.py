@@ -11,29 +11,61 @@ from src.core.database import Base
 movie_genres = Table(
     "movie_genres",
     Base.metadata,
-    Column("movie_id", ForeignKey("movies.id"), primary_key=True),
-    Column("genre_id", ForeignKey("genres.id"), primary_key=True),
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "genre_id",
+        ForeignKey("genres.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
 )
 
 movie_directors = Table(
     "movie_directors",
     Base.metadata,
-    Column("movie_id", ForeignKey("movies.id"), primary_key=True),
-    Column("director_id", ForeignKey("directors.id"), primary_key=True),
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "director_id",
+        ForeignKey("directors.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
 )
 
 movie_stars = Table(
     "movie_stars",
     Base.metadata,
-    Column("movie_id", ForeignKey("movies.id"), primary_key=True),
-    Column("star_id", ForeignKey("stars.id"), primary_key=True),
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "star_id",
+        ForeignKey("stars.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
 )
 
 user_favorites = Table(
     "user_favorites",
     Base.metadata,
-    Column("user_id", ForeignKey("users.id"), primary_key=True),
-    Column("movie_id", ForeignKey("movies.id"), primary_key=True),
+    Column(
+        "user_id",
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
 )
 
 

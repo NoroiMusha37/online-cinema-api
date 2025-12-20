@@ -42,7 +42,9 @@ class User(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
-    group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id"))
+    group_id: Mapped[int] = mapped_column(ForeignKey(
+        "user_groups.id", ondelete="CASCADE")
+    )
 
     group: Mapped[UserGroup] = relationship(
         "UserGroup", back_populates="users"
@@ -88,7 +90,9 @@ class User(Base):
 class UserProfile(Base):
     __tablename__ = "user_profiles"
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
     first_name: Mapped[str]
     last_name: Mapped[str]
     avatar: Mapped[Optional[str]]

@@ -12,10 +12,10 @@ class MovieLike(Base):
     __tablename__ = "movies_likes"
     like: Mapped[bool]
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), primary_key=True
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     movie_id: Mapped[int] = mapped_column(
-        ForeignKey("movies.id"), primary_key=True
+        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True
     )
 
     user: Mapped["User"] = relationship("User", back_populates="movies_likes")
@@ -31,9 +31,15 @@ class Comment(Base):
         server_default=func.now()
     )
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
-    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("comments.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey(
+        "users.id", ondelete="CASCADE"
+    ))
+    movie_id: Mapped[int] = mapped_column(ForeignKey(
+        "movies.id", ondelete="CASCADE"
+    ))
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey(
+        "comments.id", ondelete="CASCADE"
+    ))
     user: Mapped["User"] = relationship("User", back_populates="comments")
     movie: Mapped["Movie"] = relationship("Movie", back_populates="comments")
     parent: Mapped[Optional["Comment"]] = relationship(
@@ -51,10 +57,10 @@ class Rating(Base):
     __tablename__ = "ratings"
     score: Mapped[int]
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), primary_key=True
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     movie_id: Mapped[int] = mapped_column(
-        ForeignKey("movies.id"), primary_key=True
+        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True
     )
 
     user: Mapped["User"] = relationship("User", back_populates="ratings")
@@ -71,10 +77,10 @@ class CommentLike(Base):
     __tablename__ = "comments_likes"
     like: Mapped[bool]
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), primary_key=True
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     comment_id: Mapped[int] = mapped_column(
-        ForeignKey("comments.id"), primary_key=True
+        ForeignKey("comments.id", ondelete="CASCADE"), primary_key=True
     )
 
     user: Mapped["User"] = relationship(
