@@ -4,6 +4,8 @@ from typing import Optional, List
 
 from pydantic import BaseModel, Field, ConfigDict
 
+from src.schemas.movie import MovieList
+
 
 class LikeAction(str, Enum):
     CREATED = "created"
@@ -39,7 +41,7 @@ class CommentResponse(BaseModel):
 
 
 class CommentPage(BaseModel):
-    comments: List[CommentResponse]
+    items: List[CommentResponse]
     prev_page: Optional[str] = None
     next_page: Optional[str] = None
     total_pages: int
@@ -56,4 +58,17 @@ class RatingResponse(BaseModel):
     movie_id: int
     score: int
 
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RatingList(RatingResponse):
+    movie: MovieList
+
+
+class RatingPage(BaseModel):
+    items: List[RatingList]
+    prev_page: Optional[str] = None
+    next_page: Optional[str] = None
+    total_pages: int
+    total_items: int
     model_config = ConfigDict(from_attributes=True)
