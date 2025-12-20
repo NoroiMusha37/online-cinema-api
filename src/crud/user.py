@@ -19,9 +19,9 @@ async def get_user_by_email(
 async def get_user_by_id(user_id: int, session: AsyncSession) -> User | None:
     result = await session.execute(select(User)
                                    .options(
-                                            selectinload(User.group),
-                                            selectinload(User.profile)
-                                   )
+        selectinload(User.group),
+        selectinload(User.profile)
+    )
                                    .where(User.id == user_id)
                                    )
     return result.scalar_one_or_none()
@@ -45,12 +45,11 @@ async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
     user = User(
         email=user_in.email,
         hashed_password=hash_password(user_in.password),
-        group_id=group.id
-    )
-
-    user.profile = UserProfile(
-        first_name="",
-        last_name="",
+        group_id=group.id,
+        profile=UserProfile(
+            first_name="",
+            last_name="",
+        )
     )
 
     session.add(user)

@@ -12,7 +12,7 @@ from src.models.movie import (
     user_favorites
 )
 from src.schemas.movie import MovieQueryParameters
-from src.models.interactions import MovieLike
+from src.models.interactions import MovieLike, Comment, CommentLike, Rating
 from .commons import filter_movies
 
 
@@ -62,6 +62,10 @@ async def get_genres_with_counts(
         size: int,
         session: AsyncSession
 ):
+    result_count = await session.execute(select(func.count(Genre.id)))
+    count = result_count.scalar_one()
+    offset = (page - 1) * size
+
     stmt = (
         select(
             Genre.id,
@@ -71,15 +75,9 @@ async def get_genres_with_counts(
         .outerjoin(movie_genres, Genre.id == movie_genres.c.genre_id)
         .group_by(Genre.id)
         .order_by(Genre.name)
+        .offset(offset)
+        .limit(size)
     )
-
-    result_count = await session.execute(select(func.count())
-                                         .select_from(stmt.subquery())
-                                         )
-    count = result_count.scalar_one()
-
-    offset = (page - 1) * size
-    stmt = stmt.offset(offset).limit(size)
     result = await session.execute(stmt)
     genres = result.mappings().all()
 
@@ -100,7 +98,7 @@ async def get_user_favorites(
     return await filter_movies(stmt, params, session)
 
 
-async def get_user_like_movies(
+async def get_user_liked_movies(
         user_id: int,
         liked: bool,
         params: MovieQueryParameters,
@@ -115,3 +113,66 @@ async def get_user_like_movies(
     )
 
     return await filter_movies(stmt, params, session)
+
+
+async def get_user_liked_comments(
+        user_id: int,
+        liked: bool,
+        page: int,
+        size: int,
+        session: AsyncSession
+) -> Tuple[Sequence[Comment], int]:
+
+    count = await session.execute(select(func.count()).where(
+        and_(CommentLike.user_id == user_id, CommentLike.like == liked)
+    )
+    )
+    count = count.scalar_one()
+
+    offset = (page - 1) * size
+    stmt = (
+        select(Comment)
+        .options(selectinload(Comment.movie))
+        .join(CommentLike, Comment.id == CommentLike.comment_id)
+        .where(
+            and_(CommentLike.user_id == user_id, CommentLike.like == liked)
+        )
+        .order_by(Comment.created_at.desc())
+        .offset(offset)
+        .limit(size)
+    )
+
+    result = await session.execute(stmt)
+    comments = result.scalars().all()
+    return comments, count
+
+
+async def get_user_rated_movies(
+        user_id: int,
+        page: int,
+        size: int,
+        session: AsyncSession
+) -> Tuple[Sequence[Rating], int]:
+    count = await session.execute(select(func.count())
+                                  .select_from(Rating)
+                                  .where(Rating.user_id == user_id)
+                                  )
+    count = count.scalar_one()
+    offset = (page - 1) * size
+
+    stmt = (
+        select(Rating)
+        .options(
+            joinedload(Rating.movie).options(
+                joinedload(Movie.certification),
+                selectinload(Movie.genres),
+            )
+        )
+        .where(Rating.user_id == user_id)
+        .order_by(Rating.score.desc())
+        .offset(offset)
+        .limit(size)
+    )
+    result = await session.execute(stmt)
+    ratings = result.scalars().all()
+    return ratings, count
