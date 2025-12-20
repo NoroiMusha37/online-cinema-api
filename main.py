@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from src.routers import auth, user, admin, movie, interactions
+from src.routers import auth, user, admin, movie, interactions, moderator
 
 app = FastAPI()
 
@@ -9,3 +9,4 @@ app.include_router(user.router)
 app.include_router(admin.router)
 app.include_router(movie.router)
 app.include_router(interactions.router)
+app.include_router(moderator.router)
