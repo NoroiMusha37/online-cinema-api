@@ -1,11 +1,25 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional, List
 
 from pydantic import BaseModel, Field, ConfigDict
 
 
+class LikeAction(str, Enum):
+    CREATED = "created"
+    UPDATED = "updated"
+    DELETED = "deleted"
+
+
 class LikeCreate(BaseModel):
     liked: bool
+
+
+class LikeResponse(BaseModel):
+    action: LikeAction
+    state: Optional[bool]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CommentCreate(BaseModel):
