@@ -164,6 +164,10 @@ class Movie(Base):
     owners: Mapped[List["User"]] = relationship(
         secondary="user_movies", back_populates="purchased_movies"
     )
+    cart_items: Mapped[List["CartItem"]] = relationship(
+        "CartItem", back_populates="movie"
+    )
+
 
     @property
     def certification_name(self) -> str:

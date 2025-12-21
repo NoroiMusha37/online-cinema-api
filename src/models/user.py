@@ -88,6 +88,9 @@ class User(Base):
     purchased_movies: Mapped[List["Movie"]] = relationship(
         secondary="user_movies", back_populates="owners"
     )
+    cart: Mapped["Cart"] = relationship(
+        "Cart", back_populates="user", uselist=False
+    )
 
 
 class UserProfile(Base):
