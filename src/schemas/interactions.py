@@ -5,6 +5,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 
 from src.schemas.movie import MovieList
+from .commons import BasePagination
 
 
 class LikeAction(str, Enum):
@@ -40,13 +41,8 @@ class CommentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class CommentPage(BaseModel):
+class CommentPage(BasePagination):
     items: List[CommentResponse]
-    prev_page: Optional[str] = None
-    next_page: Optional[str] = None
-    total_pages: int
-    total_items: int
-    model_config = ConfigDict(from_attributes=True)
 
 
 class RatingCreate(BaseModel):
@@ -65,10 +61,5 @@ class RatingList(RatingResponse):
     movie: MovieList
 
 
-class RatingPage(BaseModel):
+class RatingPage(BasePagination):
     items: List[RatingList]
-    prev_page: Optional[str] = None
-    next_page: Optional[str] = None
-    total_pages: int
-    total_items: int
-    model_config = ConfigDict(from_attributes=True)

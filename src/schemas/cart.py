@@ -1,0 +1,55 @@
+from datetime import datetime
+from decimal import Decimal
+from typing import List
+
+from pydantic import BaseModel, ConfigDict, field_validator, computed_field
+from .commons import BasePagination
+
+
+class CartCreate(BaseModel):
+    user_id: int
+
+
+class CartItemCreate(BaseModel):
+    cart_id: int
+    movie_id: int
+
+
+class CartMovie(BaseModel):
+    name: str
+    price: Decimal
+    genres: List[str]
+    year: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("genres", mode="before")
+    @classmethod
+    def flatten_genres(cls, genres: List["Genre"]) -> List[str]:
+        return [genre.name for genre in genres]
+
+
+class CartItemResponse(BaseModel):
+    id: int
+    movie: CartMovie
+
+
+class CartResponse(BasePagination):
+    items: List[CartItemResponse]
+
+    @computed_field
+    def total_price(self) -> Decimal:
+        return sum((item.movie.price for item in self.items), Decimal("0.0"))
+
+
+class ModeratorCartItemResponse(CartItemResponse):
+    added_at: datetime
+
+
+class ModeratorCartResponse(BasePagination):
+    user_id: int
+    items: List[ModeratorCartItemResponse]
+
+    @computed_field
+    def total_price(self) -> Decimal:
+        return sum((item.movie.price for item in self.items), Decimal("0.0"))
