@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
 
-
 movie_genres = Table(
     "movie_genres",
     Base.metadata,
@@ -66,6 +65,21 @@ user_favorites = Table(
         ForeignKey("movies.id", ondelete="CASCADE"),
         primary_key=True
     ),
+)
+
+user_movies = Table(
+    "user_movies",
+    Base.metadata,
+    Column(
+        "user_id",
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True
+    )
 )
 
 
@@ -146,6 +160,9 @@ class Movie(Base):
     )
     favorited: Mapped[List["User"]] = relationship(
         secondary="user_favorites", back_populates="favorites"
+    )
+    owners: Mapped[List["User"]] = relationship(
+        secondary="user_movies", back_populates="purchased_movies"
     )
 
     @property

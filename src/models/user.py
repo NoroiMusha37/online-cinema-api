@@ -85,6 +85,9 @@ class User(Base):
     comments_likes: Mapped[List["CommentLike"]] = relationship(
         "CommentLike", back_populates="user"
     )
+    purchased_movies: Mapped[List["Movie"]] = relationship(
+        secondary="user_movies", back_populates="owners"
+    )
 
 
 class UserProfile(Base):

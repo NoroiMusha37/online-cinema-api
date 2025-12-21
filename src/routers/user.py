@@ -234,3 +234,24 @@ async def get_ratings(
         size=size,
         path="/users/me/ratings/"
     )
+
+
+@router.get("/me/movies", response_model=MoviePage)
+async def get_purchased_movies(
+        params: MovieQueryParameters = Depends(),
+        user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_db)
+):
+    movies, count = await movie_crud.get_movies(
+        params=params,
+        session=session,
+        user_id=user.id,
+    )
+
+    return paginate(
+        items=movies,
+        count=count,
+        page=params.page,
+        size=params.size,
+        path="/users/me/movies/"
+    )

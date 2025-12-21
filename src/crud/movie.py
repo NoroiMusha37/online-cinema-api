@@ -14,12 +14,17 @@ from src.models.movie import (
 from src.schemas.movie import MovieQueryParameters
 from src.models.interactions import MovieLike, Comment, CommentLike, Rating
 from .commons import filter_movies
+from src.models.user import User
 
 
 async def get_movies(
-        params: MovieQueryParameters, session: AsyncSession
+        params: MovieQueryParameters,
+        session: AsyncSession,
+        user_id: int | None = None
 ) -> Tuple[Sequence[Movie], int]:
     stmt = select(Movie)
+    if user_id:
+        stmt = stmt.join(Movie.owners).where(User.id == user_id)
     return await filter_movies(stmt, params, session)
 
 
