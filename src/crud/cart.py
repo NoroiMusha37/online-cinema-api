@@ -1,6 +1,8 @@
+from collections.abc import Sequence
+
 from fastapi import HTTPException
 from sqlalchemy import select, delete, exists
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from starlette import status
 
 from src.models.cart import Cart, CartItem
@@ -34,22 +36,33 @@ async def create_cart(
     return new_cart
 
 
-async def get_cart(
+async def get_cart_items(
         user_id: int,
+        page: int,
+        size: int,
         session: AsyncSession
-) -> Cart | None:
-    result = await session.execute(
-        select(Cart)
+) -> tuple[Sequence[CartItem], int]:
+    count = await session.execute(
+        select(CartItem.id)
+        .join(Cart)
+        .where(Cart.user_id == user_id)
+    )
+    count = count.scalar_one()
+    offset = (page - 1) * size
+
+    stmt = (
+        select(CartItem)
+        .join(Cart)
         .options(
-            selectinload(Cart.cart_items)
-            .joinedload(CartItem.movie)
+            joinedload(CartItem.movie)
             .selectinload(Movie.genres)
         )
-        .where(
-            Cart.user_id == user_id
-        ))
-    return result.scalar_one_or_none()
-
+        .where(Cart.user_id == user_id)
+        .offset(offset)
+        .limit(size)
+    )
+    cart_items = (await session.execute(stmt)).scalars().all()
+    return cart_items, count
 
 async def clear_cart(
         user_id: int,
