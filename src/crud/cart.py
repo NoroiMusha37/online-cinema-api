@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from fastapi import HTTPException
-from sqlalchemy import select, delete, exists
+from sqlalchemy import select, delete, exists, func
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
@@ -43,7 +43,7 @@ async def get_cart_items(
         session: AsyncSession
 ) -> tuple[Sequence[CartItem], int]:
     count = await session.execute(
-        select(CartItem.id)
+        select(func.count(CartItem.id))
         .join(Cart)
         .where(Cart.user_id == user_id)
     )
@@ -61,6 +61,7 @@ async def get_cart_items(
         .offset(offset)
         .limit(size)
     )
+
     cart_items = (await session.execute(stmt)).scalars().all()
     return cart_items, count
 

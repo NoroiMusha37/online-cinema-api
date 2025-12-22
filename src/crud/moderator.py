@@ -197,20 +197,3 @@ async def delete_named_entity[T: MetadataEntity](
             detail=f"Cannot delete {Model.__name__}. "
                    f"It is assigned to at least one movie",
         )
-
-
-async def get_user_cart(
-        user_id: int,
-        session: AsyncSession,
-) -> Cart:
-    result = await session.execute(
-        select(Cart)
-        .options(
-            selectinload(Cart.cart_items)
-            .joinedload(CartItem.movie)
-            .selectinload(Movie.genres)
-        )
-        .where(Cart.user_id == user_id)
-    )
-
-    return result.scalar_one_or_none()
