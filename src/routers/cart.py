@@ -20,7 +20,7 @@ async def get_cart(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_db)
 ):
-    cart_items, count = cart_crud.get_cart_items(
+    cart_items, count = await cart_crud.get_cart_items(
         user_id=current_user.id,
         page=page,
         size=size,

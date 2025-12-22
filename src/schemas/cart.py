@@ -10,7 +10,6 @@ class CartCreate(BaseModel):
 
 
 class CartItemCreate(BaseModel):
-    cart_id: int
     movie_id: int
 
 
@@ -31,6 +30,8 @@ class CartMovie(BaseModel):
 class CartItemResponse(BaseModel):
     id: int
     movie: CartMovie
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CartResponse(BasePagination):

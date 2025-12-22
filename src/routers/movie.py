@@ -16,7 +16,7 @@ from src.crud import moderator as moder_crud
 from src.utils.pagination import paginate
 
 router = APIRouter(prefix="/movies")
-moderator_router = APIRouter(dependencies=Depends(get_current_moderator))
+moderator_router = APIRouter(dependencies=[Depends(get_current_moderator)])
 
 router.include_router(moderator_router)
 
