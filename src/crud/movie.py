@@ -1,7 +1,7 @@
 import uuid
 from collections.abc import Sequence
 
-from sqlalchemy import func, select, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -68,7 +68,7 @@ async def get_genres_with_counts(
         session: AsyncSession
 ):
     result_count = await session.execute(select(func.count(Genre.id)))
-    count = result_count.scalar_one()
+    count = result_count.scalar() or 0
     offset = (page - 1) * size
 
     stmt = (
@@ -113,7 +113,8 @@ async def get_user_liked_movies(
         select(Movie)
         .join(MovieLike, Movie.id == MovieLike.movie_id)
         .where(
-            and_(MovieLike.user_id == user_id, MovieLike.like == liked)
+            MovieLike.user_id == user_id,
+            MovieLike.like == liked
         )
     )
 
@@ -128,7 +129,8 @@ async def get_user_liked_comments(
         session: AsyncSession
 ) -> tuple[Sequence[Comment], int]:
     count = await session.execute(select(func.count()).where(
-        and_(CommentLike.user_id == user_id, CommentLike.like == liked)
+        CommentLike.user_id== user_id,
+        CommentLike.like == liked
     )
     )
     count = count.scalar_one()
@@ -139,7 +141,8 @@ async def get_user_liked_comments(
         .options(selectinload(Comment.movie))
         .join(CommentLike, Comment.id == CommentLike.comment_id)
         .where(
-            and_(CommentLike.user_id == user_id, CommentLike.like == liked)
+            CommentLike.user_id == user_id,
+            CommentLike.like == liked
         )
         .order_by(Comment.created_at.desc())
         .offset(offset)
@@ -161,7 +164,7 @@ async def get_user_rated_movies(
                                   .select_from(Rating)
                                   .where(Rating.user_id == user_id)
                                   )
-    count = count.scalar_one()
+    count = count.scalar() or 0
     offset = (page - 1) * size
 
     stmt = (

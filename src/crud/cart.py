@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from fastapi import HTTPException
 from sqlalchemy import select, delete, exists
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from src.models.cart import Cart, CartItem
@@ -47,7 +47,7 @@ async def get_cart_items(
         .join(Cart)
         .where(Cart.user_id == user_id)
     )
-    count = count.scalar_one()
+    count = count.scalar() or 0
     offset = (page - 1) * size
 
     stmt = (
@@ -103,13 +103,16 @@ async def create_cart_item(
             user_movies.c.movie_id == cart_item_in.movie_id
         ))
     )
-    if purchased_item.scalar_one_or_none():
+    if purchased_item.scalar():
         return None
 
-    movie = await session.execute(select(Movie)
-                                  .where(Movie.id == cart_item_in.movie_id)
-                                  )
-    if not movie.scalar_one_or_none():
+    movie = await session.execute(
+        select(Movie)
+        .where(Movie.id == cart_item_in.movie_id)
+        .options(selectinload(Movie.genres))
+    )
+    movie = movie.scalar_one_or_none()
+    if not movie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Movie doesn't exist."
@@ -124,11 +127,12 @@ async def create_cart_item(
 
     new_cart_item = CartItem(
         cart_id=cart.id,
-        movie_id=cart_item_in.movie_id
+        movie_id=cart_item_in.movie_id,
+        movie=movie
     )
     session.add(new_cart_item)
     await session.commit()
-    await session.refresh(new_cart_item)
+    await session.refresh(new_cart_item, attribute_names=["id"])
     return new_cart_item
 
 

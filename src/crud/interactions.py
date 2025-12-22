@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import and_, select, func, delete, insert
+from sqlalchemy import select, func, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.interactions import Comment, Rating, MovieLike, CommentLike
@@ -20,7 +20,6 @@ async def toggle_movie_like(
         liked: LikeCreate,
         session: AsyncSession
 ) -> LikeResponse:
-
     return await toggle_generic_like(
         entity_id=movie_id,
         user_id=user_id,
@@ -56,7 +55,8 @@ async def delete_comment(
         session: AsyncSession
 ) -> bool:
     result = await session.execute(delete(Comment).where(
-        and_(Comment.id == comment_id, Comment.user_id == user_id)
+        Comment.id == comment_id,
+        Comment.user_id == user_id
     )
     )
 
@@ -78,7 +78,7 @@ async def get_comments_by_movie(
     count = await session.execute(select(func.count())
                                   .select_from(stmt.subquery())
                                   )
-    count = count.scalar_one()
+    count = count.scalar() or 0
 
     offset = (page - 1) * size
     stmt = (
@@ -100,7 +100,8 @@ async def upsert_rating(
         session: AsyncSession
 ) -> Rating:
     stmt = select(Rating).where(
-        and_(Rating.user_id == user_id, Rating.movie_id == movie_id)
+        Rating.user_id == user_id,
+        Rating.movie_id == movie_id
     )
     result = await session.execute(stmt)
     rating = result.scalar_one_or_none()
@@ -128,10 +129,8 @@ async def toggle_favorite(
         session: AsyncSession
 ) -> bool:
     stmt = delete(user_favorites).where(
-        and_(
-            user_favorites.c.user_id == user_id,
-            user_favorites.c.movie_id == movie_id
-        )
+        user_favorites.c.user_id == user_id,
+        user_favorites.c.movie_id == movie_id
     )
 
     result = await session.execute(stmt)
@@ -154,7 +153,6 @@ async def toggle_comment_like(
         liked: LikeCreate,
         session: AsyncSession
 ) -> LikeResponse:
-
     return await toggle_generic_like(
         entity_id=comment_id,
         user_id=user_id,

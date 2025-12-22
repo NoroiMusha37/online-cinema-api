@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import Select, or_, select, func, and_
+from sqlalchemy import Select, or_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -75,7 +75,7 @@ async def filter_movies(
     result_count = await session.execute(
         select(func.count()).select_from(filtered_stmt.subquery())
     )
-    count = result_count.scalar_one()
+    count = result_count.scalar() or 0
 
     data_stmt = (
         filtered_stmt
@@ -103,7 +103,7 @@ async def toggle_generic_like(
     id_column = getattr(Model, id_field_name)
 
     stmt = select(Model).where(
-        and_(id_column == entity_id, Model.user_id == user_id)
+        id_column == entity_id, Model.user_id == user_id
     )
     result = await session.execute(stmt)
     like = result.scalar_one_or_none()

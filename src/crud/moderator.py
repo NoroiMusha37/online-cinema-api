@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import and_, select, delete
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -149,7 +149,8 @@ async def update_named_entity[T: MetadataEntity](
         session: AsyncSession,
 ) -> T:
     existing_entity = await session.execute(select(Model).where(
-        and_(Model.name == entity_in.name, Model.id != entity_id)
+        Model.name == entity_in.name,
+        Model.id != entity_id
     ))
     if existing_entity.scalar_one_or_none():
         raise HTTPException(

@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.movie import Genre, Star, Director, Certification, Movie
@@ -14,7 +14,9 @@ async def check_movie_exists(
         exclude_id: int | None = None
 ):
     stmt = select(Movie).where(
-        and_(Movie.name == name, Movie.year == year, Movie.time == time)
+        Movie.name == name,
+        Movie.year == year,
+        Movie.time == time
     )
     if exclude_id:
         stmt = stmt.where(Movie.id != exclude_id)
@@ -49,11 +51,13 @@ async def validate_certification(
 async def validate_genres(
         genre_ids: list[int], session: AsyncSession
 ) -> list[Genre]:
-    genres = list((
-                      await session.execute(
-                          select(Genre).where(Genre.id.in_(genre_ids))
-                      )
-                  ).scalars().all())
+    genres = list(
+        (
+            await session.execute(
+                select(Genre).where(Genre.id.in_(genre_ids))
+            )
+        ).scalars().all()
+    )
     if len(genres) != len(genre_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -66,11 +70,13 @@ async def validate_genres(
 async def validate_stars(
         star_ids: list[int], session: AsyncSession
 ) -> list[Star]:
-    stars = list((
-                     await session.execute(
-                         select(Star).where(Star.id.in_(star_ids))
-                     )
-                 ).scalars().all())
+    stars = list(
+        (
+            await session.execute(
+                select(Star).where(Star.id.in_(star_ids))
+            )
+        ).scalars().all()
+    )
     if len(stars) != len(star_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -83,13 +89,15 @@ async def validate_stars(
 async def validate_directors(
         director_ids: list[int], session: AsyncSession
 ) -> list[Director]:
-    directors = list((
-                         await session.execute(
-                             select(Director).where(
-                                 Director.id.in_(director_ids)
-                             )
-                         )
-                     ).scalars().all())
+    directors = list(
+        (
+            await session.execute(
+                select(Director).where(
+                    Director.id.in_(director_ids)
+                )
+            )
+        ).scalars().all()
+    )
     if len(directors) != len(director_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
