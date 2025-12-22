@@ -11,6 +11,7 @@ from src.models.movie import Movie, Genre, Certification, Star, Director
 from src.schemas.moderator import MovieCreate, MovieUpdate, NamedEntity
 from . import movie as movie_crud
 from . import validation
+from ..models import Cart, CartItem
 
 T = TypeVar("T", Certification, Genre, Star, Director)
 
@@ -197,3 +198,20 @@ async def delete_named_entity(
             detail=f"Cannot delete {Model.__name__}. "
                    f"It is assigned to at least one movie",
         )
+
+
+async def get_user_cart(
+        user_id: int,
+        session: AsyncSession,
+) -> Cart:
+    result = await session.execute(
+        select(Cart)
+        .options(
+            selectinload(Cart.cart_items)
+            .joinedload(CartItem.movie)
+            .selectinload(Movie.genres)
+        )
+        .where(Cart.user_id == user_id)
+    )
+
+    return result.scalar_one_or_none()

@@ -8,3 +8,4 @@ from .user import (
 )
 from .movie import Genre, Star, Director, Certification, Movie
 from .interactions import MovieLike, Comment, Rating, CommentLike
+from .cart import Cart, CartItem
