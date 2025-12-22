@@ -166,6 +166,9 @@ class Movie(Base):
     cart_items: Mapped[list["CartItem"]] = relationship(
         "CartItem", back_populates="movie"
     )
+    order_items: Mapped[list["OrderItem"]] = relationship(
+        "OrderItem", back_populates="movie"
+    )
 
 
     @property

@@ -90,6 +90,9 @@ class User(Base):
     cart: Mapped["Cart"] = relationship(
         "Cart", back_populates="user", uselist=False
     )
+    orders: Mapped[list["Order"]] = relationship(
+        "Order", back_populates="user"
+    )
 
 
 class UserProfile(Base):
