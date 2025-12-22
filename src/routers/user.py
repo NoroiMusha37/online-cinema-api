@@ -1,32 +1,30 @@
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, Query
-from sqlalchemy import update
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from src.core.database import get_db
-from src.core.deps import get_current_active_user
+from src.core.deps import get_current_active_user, get_current_admin
 from src.core.security import hash_password, verify_password
 from src.models.user import User
-from src.schemas.interactions import CommentPage, RatingPage
-from src.schemas.movie import MoviePage, MovieQueryParameters
 from src.schemas.user import (
     UserRead,
     UserProfileRead,
     UserProfileUpdate,
     PasswordResetRequest,
     PasswordResetConfirm,
-    UserPasswordChange,
+    UserPasswordChange, UserUpdateAdmin,
 )
 from src.crud import user as user_crud
 from src.crud import token as token_crud
-from src.crud import movie as movie_crud
 from src.tasks.email_tasks import send_reset_password_email_task
-from src.utils.pagination import paginate
 
 router = APIRouter(prefix="/users")
+admin_router = APIRouter(dependencies=[Depends(get_current_admin)])
+
+router.include_router(admin_router)
 
 
 @router.get("/me", response_model=UserRead)
@@ -133,10 +131,10 @@ async def password_reset_confirm(
 
     hashed_password = hash_password(payload.new_password)
 
-    await session.execute(
-        update(User)
-        .where(User.id == reset_token.user_id)
-        .values(hashed_password=hashed_password)
+    await user_crud.update_password(
+        user_id=reset_token.user_id,
+        new_password=hashed_password,
+        session=session
     )
     await token_crud.delete_password_reset_token(
         token=reset_token.token, session=session
@@ -145,113 +143,14 @@ async def password_reset_confirm(
     return {"message": "Password updated successfully"}
 
 
-@router.get("/me/favorites", response_model=MoviePage)
-async def get_favorites(
-        current_user: User = Depends(get_current_active_user),
-        params: MovieQueryParameters = Depends(),
-        session: AsyncSession = Depends(get_db)
+@admin_router.patch("/{user_id}", response_model=UserRead)
+async def update_user(
+        user_id: int,
+        user_in: UserUpdateAdmin,
+        session: AsyncSession = Depends(get_db),
 ):
-    favorites, count = await movie_crud.get_user_favorites(
-        user_id=current_user.id,
-        params=params,
-        session=session
-    )
-
-    return paginate(
-        items=favorites,
-        count=count,
-        page=params.page,
-        size=params.size,
-        path="/users/me/favorites/"
-    )
-
-
-@router.get("/me/movie-likes", response_model=MoviePage)
-async def get_movie_likes(
-        liked: bool,
-        current_user: User = Depends(get_current_active_user),
-        params: MovieQueryParameters = Depends(),
-        session: AsyncSession = Depends(get_db)
-):
-    likes, count = await movie_crud.get_user_liked_movies(
-        user_id=current_user.id,
-        params=params,
+    return await user_crud.update_user_admin(
+        user_id=user_id,
+        user_in=user_in,
         session=session,
-        liked=liked
-    )
-
-    return paginate(
-        items=likes,
-        count=count,
-        page=params.page,
-        size=params.size,
-        path="/users/me/movie-likes/"
-    )
-
-
-@router.get("/me/comment-likes", response_model=CommentPage)
-async def get_comment_likes(
-        liked: bool,
-        page: int = Query(1, ge=1),
-        size: int = Query(20, ge=1, le=100),
-        current_user: User = Depends(get_current_active_user),
-        session: AsyncSession = Depends(get_db)
-):
-    comments, count = await movie_crud.get_user_liked_comments(
-        user_id=current_user.id,
-        liked=liked,
-        page=page,
-        size=size,
-        session=session
-    )
-
-    return paginate(
-        items=comments,
-        count=count,
-        page=page,
-        size=size,
-        path="/users/me/comment-likes/"
-    )
-
-
-@router.get("/me/ratings", response_model=RatingPage)
-async def get_ratings(
-        page: int = Query(1, ge=1),
-        size: int = Query(20, ge=1, le=100),
-        user: User = Depends(get_current_active_user),
-        session: AsyncSession = Depends(get_db)
-):
-    ratings, count = await movie_crud.get_user_rated_movies(
-        user_id=user.id,
-        page=page,
-        size=size,
-        session=session
-    )
-    return paginate(
-        items=ratings,
-        count=count,
-        page=page,
-        size=size,
-        path="/users/me/ratings/"
-    )
-
-
-@router.get("/me/movies", response_model=MoviePage)
-async def get_purchased_movies(
-        params: MovieQueryParameters = Depends(),
-        user: User = Depends(get_current_active_user),
-        session: AsyncSession = Depends(get_db)
-):
-    movies, count = await movie_crud.get_movies(
-        params=params,
-        session=session,
-        user_id=user.id,
-    )
-
-    return paginate(
-        items=movies,
-        count=count,
-        page=params.page,
-        size=params.size,
-        path="/users/me/movies/"
     )

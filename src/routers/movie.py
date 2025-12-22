@@ -4,20 +4,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from src.core.database import get_db
-from src.core.deps import convert_movie_uuid_to_id
-from src.schemas.interactions import CommentPage
+from src.core.deps import get_current_moderator
+from src.schemas.moderator import MovieCreate, MovieUpdate
 from src.schemas.movie import (
     MovieQueryParameters,
     MoviePage,
-    MovieDetail,
-    GenreList
+    MovieDetail
 )
 from src.crud import movie as movie_crud
-from src.crud import interactions as inter_crud
+from src.crud import moderator as moder_crud
 from src.utils.pagination import paginate
 
 router = APIRouter(prefix="/movies")
+moderator_router = APIRouter(dependencies=Depends(get_current_moderator))
 
+router.include_router(moderator_router)
 
 @router.get("/", response_model=MoviePage)
 async def get_movies(
@@ -31,25 +32,6 @@ async def get_movies(
         page=params.page,
         size=params.size,
         path="/movies/"
-    )
-
-
-@router.get("/genres", response_model=GenreList)
-async def get_genres(
-        page: int = Query(1, ge=1),
-        size: int = Query(20, ge=1, le=100),
-        session: AsyncSession = Depends(get_db),
-):
-    genres, count = await movie_crud.get_genres_with_counts(
-        page=page, size=size, session=session
-    )
-
-    return paginate(
-        items=genres,
-        count=count,
-        page=page,
-        size=size,
-        path="/movies/genres/"
     )
 
 
@@ -70,27 +52,36 @@ async def get_movie(
     return movie
 
 
-@router.get("/genres/{uuid}/comments", response_model=CommentPage)
-async def get_comments(
-        movie_id: int = Depends(convert_movie_uuid_to_id),
-        page: int = Query(1, ge=1),
-        size: int = Query(20, ge=1, le=100),
-        session: AsyncSession = Depends(get_db),
+@moderator_router.post("/", response_model=MovieDetail)
+async def create_movie(
+        movie_in: MovieCreate,
+        session: AsyncSession = Depends(get_db)
 ):
-    movie = await movie_crud.get_movie_by_id(movie_id, session=session)
-    if not movie:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found"
-        )
-
-    comments, count = await inter_crud.get_comments_by_movie(
-        movie_id=movie_id, page=page, size=size, session=session
+    return await moder_crud.create_movie(
+        movie_in=movie_in,
+        session=session,
     )
 
-    return paginate(
-        items=comments,
-        count=count,
-        page=page,
-        size=size,
-        path="/movies/genres/{uuid}/comments/"
+
+@moderator_router.patch("/{movie_id}", response_model=MovieDetail)
+async def update_movie(
+        movie_id: int,
+        movie_in: MovieUpdate,
+        session: AsyncSession = Depends(get_db)
+):
+    return await moder_crud.update_movie(
+        movie_id=movie_id,
+        movie_in=movie_in,
+        session=session,
+    )
+
+
+@moderator_router.delete("/{movie_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_movie(
+        movie_id: int,
+        session: AsyncSession = Depends(get_db)
+):
+    return await moder_crud.delete_movie(
+        movie_id=movie_id,
+        session=session,
     )
