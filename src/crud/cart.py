@@ -64,6 +64,7 @@ async def get_cart_items(
     cart_items = (await session.execute(stmt)).scalars().all()
     return cart_items, count
 
+
 async def clear_cart(
         user_id: int,
         session: AsyncSession
@@ -147,4 +148,11 @@ async def delete_cart_item(
     )
 
     result = await session.execute(stmt)
+
+    if result.rowcount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="There is no such movie in the cart."
+        )
+
     await session.commit()
