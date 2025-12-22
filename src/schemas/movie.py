@@ -1,7 +1,6 @@
 import uuid
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
 
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict
@@ -23,7 +22,7 @@ class GenreWithCount(BaseResponse):
 
 
 class GenreList(BasePagination):
-    items: List[GenreWithCount]
+    items: list[GenreWithCount]
 
 
 class StarResponse(BaseResponse):
@@ -46,11 +45,11 @@ class MovieBase(BaseModel):
     time: int
     imdb: float
     votes: int
-    meta_score: Optional[float] = None
-    gross: Optional[float] = None
+    meta_score: float | None = None
+    gross: float | None = None
     description: str
     price: Decimal
-    genres: List[GenreResponse]
+    genres: list[GenreResponse]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -61,13 +60,13 @@ class MovieList(MovieBase):
 
 class MovieDetail(MovieBase):
     certification: CertificationResponse
-    stars: List[StarResponse]
-    directors: List[DirectorResponse]
+    stars: list[StarResponse]
+    directors: list[DirectorResponse]
     comment_count: int = 0
 
 
 class MoviePage(BasePagination):
-    items: List[MovieList]
+    items: list[MovieList]
 
 
 class SortOptions(str, Enum):
@@ -92,17 +91,17 @@ class MovieQueryParameters:
         self,
         page: int = Query(1, ge=1),
         size: int = Query(20, ge=1, le=100),
-        search: Optional[str] = Query(None),
-        genre_ids: Optional[List[int]] = Query(None, alias="genre"),
-        year_from: Optional[int] = Query(None, ge=1888),
-        year_to: Optional[int] = Query(None, ge=1888),
-        min_time: Optional[int] = Query(None, ge=1),
-        max_time: Optional[int] = Query(None, ge=1),
-        min_imdb: Optional[float] = Query(None, ge=0, le=10),
-        min_votes: Optional[int] = Query(None, ge=0),
-        min_meta_score: Optional[int] = Query(None, ge=0, le=100),
-        price_from: Optional[Decimal] = Query(None, ge=0),
-        price_to: Optional[Decimal] = Query(None, ge=0),
+        search: str | None = Query(None),
+        genre_ids: list[int] | None = Query(None, alias="genre"),
+        year_from: int | None = Query(None, ge=1888),
+        year_to: int | None = Query(None, ge=1888),
+        min_time: int | None = Query(None, ge=1),
+        max_time: int | None = Query(None, ge=1),
+        min_imdb: float | None = Query(None, ge=0, le=10),
+        min_votes: int | None = Query(None, ge=0),
+        min_meta_score: int | None = Query(None, ge=0, le=100),
+        price_from: Decimal | None = Query(None, ge=0),
+        price_to: Decimal | None = Query(None, ge=0),
         sort_by: SortOptions = Query(SortOptions.YEAR_DESC),
     ):
         self.page = page

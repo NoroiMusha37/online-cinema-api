@@ -6,7 +6,12 @@ from starlette import status
 from src.core.database import get_db
 from src.core.deps import convert_movie_uuid_to_id
 from src.schemas.interactions import CommentPage
-from src.schemas.movie import MovieQueryParameters, MoviePage, MovieDetail, GenreList
+from src.schemas.movie import (
+    MovieQueryParameters,
+    MoviePage,
+    MovieDetail,
+    GenreList
+)
 from src.crud import movie as movie_crud
 from src.crud import interactions as inter_crud
 from src.utils.pagination import paginate

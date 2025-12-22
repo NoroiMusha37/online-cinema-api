@@ -1,5 +1,5 @@
 import uuid
-from typing import Tuple, Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,7 @@ async def get_movies(
         params: MovieQueryParameters,
         session: AsyncSession,
         user_id: int | None = None
-) -> Tuple[Sequence[Movie], int]:
+) -> tuple[Sequence[Movie], int]:
     stmt = select(Movie)
     if user_id:
         stmt = stmt.join(Movie.owners).where(User.id == user_id)
@@ -93,7 +93,7 @@ async def get_user_favorites(
         user_id: int,
         params: MovieQueryParameters,
         session: AsyncSession
-) -> Tuple[Sequence[Movie], int]:
+) -> tuple[Sequence[Movie], int]:
     stmt = (
         select(Movie)
         .join(user_favorites, Movie.id == user_favorites.c.movie_id)
@@ -108,7 +108,7 @@ async def get_user_liked_movies(
         liked: bool,
         params: MovieQueryParameters,
         session: AsyncSession
-) -> Tuple[Sequence[Movie], int]:
+) -> tuple[Sequence[Movie], int]:
     stmt = (
         select(Movie)
         .join(MovieLike, Movie.id == MovieLike.movie_id)
@@ -126,7 +126,7 @@ async def get_user_liked_comments(
         page: int,
         size: int,
         session: AsyncSession
-) -> Tuple[Sequence[Comment], int]:
+) -> tuple[Sequence[Comment], int]:
     count = await session.execute(select(func.count()).where(
         and_(CommentLike.user_id == user_id, CommentLike.like == liked)
     )
@@ -156,7 +156,7 @@ async def get_user_rated_movies(
         page: int,
         size: int,
         session: AsyncSession
-) -> Tuple[Sequence[Rating], int]:
+) -> tuple[Sequence[Rating], int]:
     count = await session.execute(select(func.count())
                                   .select_from(Rating)
                                   .where(Rating.user_id == user_id)

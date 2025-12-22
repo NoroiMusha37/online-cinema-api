@@ -1,5 +1,4 @@
 from datetime import datetime, date
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -9,10 +8,10 @@ from src.models.user import GenderEnum
 class UserProfileBase(BaseModel):
     first_name: str = Field(max_length=32)
     last_name: str = Field(max_length=32)
-    avatar: Optional[str] = None
-    gender: Optional[GenderEnum] = None
-    date_of_birth: Optional[date] = None
-    info: Optional[str] = Field(None, max_length=512)
+    avatar: str | None = None
+    gender: GenderEnum | None = None
+    date_of_birth: date | None = None
+    info: str | None = Field(None, max_length=512)
 
 
 class UserProfileCreate(UserProfileBase):
@@ -20,12 +19,12 @@ class UserProfileCreate(UserProfileBase):
 
 
 class UserProfileUpdate(BaseModel):
-    first_name: Optional[str] = Field(None, max_length=32)
-    last_name: Optional[str] = Field(None, max_length=32)
-    avatar: Optional[str] = None
-    gender: Optional[GenderEnum] = None
-    date_of_birth: Optional[date] = None
-    info: Optional[str] = Field(None, max_length=512)
+    first_name: str | None = Field(None, max_length=32)
+    last_name: str | None = Field(None, max_length=32)
+    avatar: str | None = None
+    gender: GenderEnum | None = None
+    date_of_birth: date | None = None
+    info: str | None = Field(None, max_length=512)
 
 
 class UserProfileRead(UserProfileBase):
@@ -48,7 +47,7 @@ class UserRead(UserBase):
     is_active: bool
     created_at: datetime
     group_id: int
-    profile: Optional[UserProfileRead] = None
+    profile: UserProfileRead | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -59,8 +58,8 @@ class UserPasswordChange(BaseModel):
 
 
 class UserUpdateAdmin(BaseModel):
-    group_id: Optional[int] = None
-    is_active: Optional[bool] = None
+    group_id: int | None = None
+    is_active: bool | None = None
 
 
 class Token(BaseModel):

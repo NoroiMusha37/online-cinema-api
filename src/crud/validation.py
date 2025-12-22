@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,8 +47,8 @@ async def validate_certification(
 
 
 async def validate_genres(
-        genre_ids: List[int], session: AsyncSession
-) -> List[Genre]:
+        genre_ids: list[int], session: AsyncSession
+) -> list[Genre]:
     genres = list((
                       await session.execute(
                           select(Genre).where(Genre.id.in_(genre_ids))
@@ -66,8 +64,8 @@ async def validate_genres(
 
 
 async def validate_stars(
-        star_ids: List[int], session: AsyncSession
-) -> List[Star]:
+        star_ids: list[int], session: AsyncSession
+) -> list[Star]:
     stars = list((
                      await session.execute(
                          select(Star).where(Star.id.in_(star_ids))
@@ -83,8 +81,8 @@ async def validate_stars(
 
 
 async def validate_directors(
-        director_ids: List[int], session: AsyncSession
-) -> List[Director]:
+        director_ids: list[int], session: AsyncSession
+) -> list[Director]:
     directors = list((
                          await session.execute(
                              select(Director).where(

@@ -1,4 +1,4 @@
-from typing import Tuple, Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import and_, select, func, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,7 +72,7 @@ async def get_comments_by_movie(
         page: int,
         size: int,
         session: AsyncSession
-) -> Tuple[Sequence[Comment], int]:
+) -> tuple[Sequence[Comment], int]:
     stmt = select(Comment).where(Comment.movie_id == movie_id)
 
     count = await session.execute(select(func.count())

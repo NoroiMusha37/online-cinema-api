@@ -1,4 +1,4 @@
-from typing import Tuple, Sequence, Type, Union
+from collections.abc import Sequence
 
 from sqlalchemy import Select, or_, select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +69,7 @@ def apply_filters(stmt: Select, params: "MovieQueryParameters") -> Select:
 
 async def filter_movies(
         stmt: Select, params: "MovieQueryParameters", session: AsyncSession
-) -> Tuple[Sequence[Movie], int]:
+) -> tuple[Sequence[Movie], int]:
     filtered_stmt = apply_filters(stmt, params)
 
     result_count = await session.execute(
@@ -96,7 +96,7 @@ async def toggle_generic_like(
         entity_id: int,
         user_id: int,
         liked: LikeCreate,
-        Model: Union[Type["MovieLike"], Type["CommentLike"]],
+        Model: type["MovieLike"] | type["CommentLike"],
         id_field_name: str,
         session: AsyncSession
 ) -> LikeResponse:

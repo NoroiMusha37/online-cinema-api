@@ -1,5 +1,4 @@
 from decimal import Decimal
-from typing import Optional, List
 import uuid as uuid_lib
 
 from sqlalchemy import ForeignKey, Table, Column, Numeric, UniqueConstraint
@@ -87,7 +86,7 @@ class Genre(Base):
     __tablename__ = "genres"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    movies: Mapped[List["Movie"]] = relationship(
+    movies: Mapped[list["Movie"]] = relationship(
         secondary=movie_genres, back_populates="genres"
     )
 
@@ -96,7 +95,7 @@ class Star(Base):
     __tablename__ = "stars"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    movies: Mapped[List["Movie"]] = relationship(
+    movies: Mapped[list["Movie"]] = relationship(
         secondary=movie_stars, back_populates="stars"
     )
 
@@ -105,7 +104,7 @@ class Director(Base):
     __tablename__ = "directors"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    movies: Mapped[List["Movie"]] = relationship(
+    movies: Mapped[list["Movie"]] = relationship(
         secondary=movie_directors, back_populates="directors"
     )
 
@@ -114,7 +113,7 @@ class Certification(Base):
     __tablename__ = "certifications"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    movies: Mapped[List["Movie"]] = relationship(
+    movies: Mapped[list["Movie"]] = relationship(
         "Movie", back_populates="certification"
     )
 
@@ -130,8 +129,8 @@ class Movie(Base):
     time: Mapped[int]
     imdb: Mapped[float]
     votes: Mapped[int]
-    meta_score: Mapped[Optional[float]]
-    gross: Mapped[Optional[float]]
+    meta_score: Mapped[float | None]
+    gross: Mapped[float | None]
     description: Mapped[str]
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     certification_id: Mapped[int] = mapped_column(ForeignKey(
@@ -140,31 +139,31 @@ class Movie(Base):
     certification: Mapped[Certification] = relationship(
         "Certification", back_populates="movies"
     )
-    genres: Mapped[List[Genre]] = relationship(
+    genres: Mapped[list[Genre]] = relationship(
         secondary=movie_genres, back_populates="movies"
     )
-    directors: Mapped[List[Director]] = relationship(
+    directors: Mapped[list[Director]] = relationship(
         secondary=movie_directors, back_populates="movies"
     )
-    stars: Mapped[List[Star]] = relationship(
+    stars: Mapped[list[Star]] = relationship(
         secondary=movie_stars, back_populates="movies"
     )
-    likes: Mapped[List["MovieLike"]] = relationship(
+    likes: Mapped[list["MovieLike"]] = relationship(
         "MovieLike", back_populates="movie"
     )
-    comments: Mapped[List["Comment"]] = relationship(
+    comments: Mapped[list["Comment"]] = relationship(
         "Comment", back_populates="movie"
     )
-    ratings: Mapped[List["Rating"]] = relationship(
+    ratings: Mapped[list["Rating"]] = relationship(
         "Rating", back_populates="movie"
     )
-    favorited: Mapped[List["User"]] = relationship(
+    favorited: Mapped[list["User"]] = relationship(
         secondary="user_favorites", back_populates="favorites"
     )
-    owners: Mapped[List["User"]] = relationship(
+    owners: Mapped[list["User"]] = relationship(
         secondary="user_movies", back_populates="purchased_movies"
     )
-    cart_items: Mapped[List["CartItem"]] = relationship(
+    cart_items: Mapped[list["CartItem"]] = relationship(
         "CartItem", back_populates="movie"
     )
 

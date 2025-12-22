@@ -5,7 +5,12 @@ from starlette import status
 from src.core.database import get_db
 from src.core.deps import get_current_moderator
 from src.models.movie import Genre, Star, Director, Certification
-from src.schemas.moderator import MovieCreate, MovieUpdate, NamedEntity, NamedEntityResponse
+from src.schemas.moderator import (
+    MovieCreate,
+    MovieUpdate,
+    NamedEntity,
+    NamedEntityResponse
+)
 from src.schemas.movie import MovieDetail
 from src.crud import moderator as moder_crud
 

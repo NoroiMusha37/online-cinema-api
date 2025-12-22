@@ -1,6 +1,5 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional, List
 
 from sqlalchemy import ForeignKey, func, DateTime
 from sqlalchemy.orm import Mapped, relationship
@@ -25,7 +24,7 @@ class UserGroup(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[UserGroupEnum] = mapped_column(unique=True)
 
-    users: Mapped[List["User"]] = relationship("User", back_populates="group")
+    users: Mapped[list["User"]] = relationship("User", back_populates="group")
 
 
 class User(Base):
@@ -67,25 +66,25 @@ class User(Base):
         cascade="all, delete-orphan",
         uselist=False
     )
-    refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
     )
-    movies_likes: Mapped[List["MovieLike"]] = relationship(
+    movies_likes: Mapped[list["MovieLike"]] = relationship(
         "MovieLike", back_populates="user"
     )
-    comments: Mapped[List["Comment"]] = relationship(
+    comments: Mapped[list["Comment"]] = relationship(
         "Comment", back_populates="user"
     )
-    ratings: Mapped[List["Rating"]] = relationship(
+    ratings: Mapped[list["Rating"]] = relationship(
         "Rating", back_populates="user"
     )
-    favorites: Mapped[List["Movie"]] = relationship(
+    favorites: Mapped[list["Movie"]] = relationship(
         secondary="user_favorites", back_populates="favorited"
     )
-    comments_likes: Mapped[List["CommentLike"]] = relationship(
+    comments_likes: Mapped[list["CommentLike"]] = relationship(
         "CommentLike", back_populates="user"
     )
-    purchased_movies: Mapped[List["Movie"]] = relationship(
+    purchased_movies: Mapped[list["Movie"]] = relationship(
         secondary="user_movies", back_populates="owners"
     )
     cart: Mapped["Cart"] = relationship(
@@ -101,10 +100,10 @@ class UserProfile(Base):
     )
     first_name: Mapped[str]
     last_name: Mapped[str]
-    avatar: Mapped[Optional[str]]
-    gender: Mapped[Optional[GenderEnum]]
-    date_of_birth: Mapped[Optional[date]]
-    info: Mapped[Optional[str]]
+    avatar: Mapped[str | None]
+    gender: Mapped[GenderEnum | None]
+    date_of_birth: Mapped[date | None]
+    info: Mapped[str | None]
 
     user: Mapped[User] = relationship("User", back_populates="profile")
 

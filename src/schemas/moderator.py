@@ -1,5 +1,4 @@
 from decimal import Decimal
-from typing import Optional, List
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -10,33 +9,33 @@ class MovieBase(BaseModel):
     time: int
     imdb: float
     votes: int
-    meta_score: Optional[float]
-    gross: Optional[float]
+    meta_score: float | None
+    gross: float | None
     description: str
     price: Decimal = Field(max_digits=10, decimal_places=2)
     certification_id: int
 
 
 class MovieCreate(MovieBase):
-    genre_ids: List[int]
-    star_ids: List[int]
-    director_ids: List[int]
+    genre_ids: int | None
+    star_ids: int | None
+    director_ids: int | None
 
 
 class MovieUpdate(BaseModel):
-    name: Optional[str] = None
-    year: Optional[int] = None
-    time: Optional[int] = None
-    imdb: Optional[float] = None
-    votes: Optional[int] = None
-    meta_score: Optional[float] = None
-    gross: Optional[float] = None
-    description: Optional[str] = None
-    price: Optional[Decimal] = Field(None, max_digits=10, decimal_places=2)
-    certification_id: Optional[int] = None
-    genre_ids: Optional[List[int]] = None
-    star_ids: Optional[List[int]] = None
-    director_ids: Optional[List[int]] = None
+    name: str | None = None
+    year: int | None = None
+    time: int | None = None
+    imdb: float | None = None
+    votes: int | None = None
+    meta_score: float | None = None
+    gross: float | None = None
+    description: str | None = None
+    price: Decimal | None = Field(None, max_digits=10, decimal_places=2)
+    certification_id: int | None = None
+    genre_ids: list[int] | None = None
+    star_ids: list[int] | None = None
+    director_ids: list[int] | None = None
 
 
 class NamedEntity(BaseModel):

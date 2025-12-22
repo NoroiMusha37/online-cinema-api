@@ -1,5 +1,3 @@
-from typing import TypeVar, Type
-
 from fastapi import HTTPException
 from sqlalchemy import and_, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +11,7 @@ from . import movie as movie_crud
 from . import validation
 from ..models import Cart, CartItem
 
-T = TypeVar("T", Certification, Genre, Star, Director)
+type MetadataEntity = Certification | Genre | Star | Director
 
 
 async def create_movie(
@@ -120,8 +118,8 @@ async def delete_movie(
     await session.commit()
 
 
-async def create_named_entity(
-        Model: Type[T],
+async def create_named_entity[T: MetadataEntity](
+        Model: type[T],
         entity_in: NamedEntity,
         session: AsyncSession,
 ) -> T:
@@ -144,8 +142,8 @@ async def create_named_entity(
     return new_entity
 
 
-async def update_named_entity(
-        Model: Type[T],
+async def update_named_entity[T: MetadataEntity](
+        Model: type[T],
         entity_id: int,
         entity_in: NamedEntity,
         session: AsyncSession,
@@ -175,8 +173,8 @@ async def update_named_entity(
     return entity
 
 
-async def delete_named_entity(
-        Model: Type[T],
+async def delete_named_entity[T: MetadataEntity](
+        Model: type[T],
         entity_id: int,
         session: AsyncSession,
 ) -> None:

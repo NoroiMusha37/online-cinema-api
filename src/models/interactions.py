@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional, List
 
 from sqlalchemy import DateTime, func, ForeignKey, CheckConstraint
 from sqlalchemy.orm import Mapped, relationship
@@ -37,18 +36,18 @@ class Comment(Base):
     movie_id: Mapped[int] = mapped_column(ForeignKey(
         "movies.id", ondelete="CASCADE"
     ))
-    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey(
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey(
         "comments.id", ondelete="CASCADE"
     ))
     user: Mapped["User"] = relationship("User", back_populates="comments")
     movie: Mapped["Movie"] = relationship("Movie", back_populates="comments")
-    parent: Mapped[Optional["Comment"]] = relationship(
+    parent: Mapped["Comment"] = relationship(
         "Comment", remote_side=[id], back_populates="replies"
     )
-    replies: Mapped[List["Comment"]] = relationship(
+    replies: Mapped[list["Comment"]] = relationship(
         "Comment", back_populates="parent"
     )
-    likes: Mapped[List["CommentLike"]] = relationship(
+    likes: Mapped[list["CommentLike"]] = relationship(
         "CommentLike", back_populates="comment"
     )
 

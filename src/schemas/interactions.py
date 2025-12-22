@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -20,14 +19,14 @@ class LikeCreate(BaseModel):
 
 class LikeResponse(BaseModel):
     action: LikeAction
-    state: Optional[bool]
+    state: bool | None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class CommentCreate(BaseModel):
     text: str = Field(max_length=512)
-    parent_id: Optional[int] = None
+    parent_id: int | None = None
 
 
 class CommentResponse(BaseModel):
@@ -36,13 +35,13 @@ class CommentResponse(BaseModel):
     movie_id: int
     text: str
     created_at: datetime
-    parent_id: Optional[int] = None
+    parent_id: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class CommentPage(BasePagination):
-    items: List[CommentResponse]
+    items: list[CommentResponse]
 
 
 class RatingCreate(BaseModel):
@@ -62,4 +61,4 @@ class RatingList(RatingResponse):
 
 
 class RatingPage(BasePagination):
-    items: List[RatingList]
+    items: list[RatingList]
