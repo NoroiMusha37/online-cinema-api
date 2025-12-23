@@ -2,6 +2,7 @@ from decimal import Decimal
 import uuid as uuid_lib
 
 from sqlalchemy import ForeignKey, Table, Column, Numeric, UniqueConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
@@ -171,7 +172,7 @@ class Movie(Base):
     )
 
 
-    @property
+    @hybrid_property
     def certification_name(self) -> str:
         return self.certification.name
 

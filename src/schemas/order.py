@@ -46,11 +46,6 @@ class OrderDetail(OrderBase):
 class OrderList(OrderBase):
     items_names: list[str]
 
-    @field_validator("items_names", mode="before")
-    @classmethod
-    def get_names(cls, items) -> list[str]:
-        return [item.movie.name for item in items]
-
 
 class OrderResponse(BasePagination):
     items: list[OrderList]

@@ -2,7 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import DateTime, func, Numeric
+from sqlalchemy import DateTime, func, Numeric, ForeignKey
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
@@ -18,7 +19,7 @@ class Order(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(
-        foreign_key="users.id", nullable=False
+        ForeignKey("users.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -35,15 +36,19 @@ class Order(Base):
         "OrderItem", back_populates="order", cascade="all, delete-orphan"
     )
 
+    @hybrid_property
+    def items_names(self) -> list[str]:
+        return [item.movie.name for item in self.items]
+
 
 class OrderItem(Base):
     __tablename__ = "order_items"
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[int] = mapped_column(
-        foreign_key="orders.id", nullable=False
+        ForeignKey("orders.id"), nullable=False
     )
     movie_id: Mapped[int] = mapped_column(
-        foreign_key="movies.id", nullable=False
+        ForeignKey("movies.id"), nullable=False
     )
     price_at_order: Mapped[Decimal] = mapped_column(
         Numeric(10, 2), nullable=False
