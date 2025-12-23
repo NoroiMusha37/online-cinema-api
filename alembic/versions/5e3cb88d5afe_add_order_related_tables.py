@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'PAID', 'CANCELED', name='statusenum'), nullable=False),
+    sa.Column('status', sa.Enum('PENDING', 'PAID', 'CANCELED', name='orderstatusenum'), nullable=False),
     sa.Column('total_amount', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

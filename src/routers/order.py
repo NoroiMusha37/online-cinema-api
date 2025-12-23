@@ -7,7 +7,7 @@ from starlette import status
 from src.core.database import get_db
 from src.core.deps import get_current_active_user, get_current_moderator
 from src.models import User
-from src.models.order import StatusEnum
+from src.models.order import OrderStatusEnum
 from src.schemas.order import OrderResponse, OrderDetail, OrderUpdate
 
 from src.crud import order as order_crud
@@ -61,7 +61,7 @@ async def get_order_detail(
 
 @router.get("/", response_model=OrderResponse)
 async def get_all_orders(
-        status: StatusEnum | None,
+        status: OrderStatusEnum | None,
         user_id: int | None = Query(None, ge=1),
         start_date: datetime | None = Query(None, ge=1888),
         end_date: datetime | None = Query(None, ge=1888),

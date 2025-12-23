@@ -93,6 +93,9 @@ class User(Base):
     orders: Mapped[list["Order"]] = relationship(
         "Order", back_populates="user"
     )
+    payments: Mapped[list["Payment"]] = relationship(
+        "Payment", back_populates="user"
+    )
 
 
 class UserProfile(Base):

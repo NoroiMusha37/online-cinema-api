@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
 
-class StatusEnum(str, Enum):
+class OrderStatusEnum(str, Enum):
     PENDING = "pending"
     PAID = "paid"
     CANCELED = "canceled"
@@ -24,8 +24,8 @@ class Order(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    status: Mapped[StatusEnum] = mapped_column(
-        default=StatusEnum.PENDING, nullable=False
+    status: Mapped[OrderStatusEnum] = mapped_column(
+        default=OrderStatusEnum.PENDING, nullable=False
     )
     total_amount: Mapped[Decimal] = mapped_column(
         Numeric(10, 2), nullable=False
@@ -34,6 +34,9 @@ class Order(Base):
     user: Mapped["User"] = relationship("User", back_populates="orders")
     items: Mapped[list["OrderItem"]] = relationship(
         "OrderItem", back_populates="order", cascade="all, delete-orphan"
+    )
+    payments: Mapped[list["Payment"]] = relationship(
+        "Payment", back_populates="order"
     )
 
     @hybrid_property
@@ -57,4 +60,7 @@ class OrderItem(Base):
     order: Mapped[Order] = relationship("Order", back_populates="items")
     movie: Mapped["Movie"] = relationship(
         "Movie", back_populates="order_items"
+    )
+    payment_items: Mapped[list["PaymentItem"]] = relationship(
+        "PaymentItem", back_populates="order_item"
     )

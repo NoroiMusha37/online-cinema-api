@@ -14,6 +14,7 @@ from src.models.movie import *
 from src.models.interactions import *
 from src.models.cart import *
 from src.models.order import *
+from src.models.payment import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -10,7 +10,7 @@ from starlette import status
 
 from src.models import Cart, CartItem
 from src.models.movie import user_movies, Movie
-from src.models.order import Order, OrderItem, StatusEnum
+from src.models.order import Order, OrderItem, OrderStatusEnum
 from src.schemas.order import OrderUpdate
 from src.crud import cart as cart_crud
 
@@ -72,7 +72,7 @@ async def get_all_orders(
         size: int,
         session: AsyncSession,
         user_id: int | None = None,
-        status: StatusEnum | None = None,
+        status: OrderStatusEnum | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None
 ) -> tuple[Sequence[Order], int]:
@@ -171,7 +171,7 @@ async def checkout_cart(
             .join(Order)
             .where(
                 Order.user_id == user_id,
-                Order.status == StatusEnum.PENDING
+                Order.status == OrderStatusEnum.PENDING
             )
         )
     )
@@ -242,13 +242,13 @@ async def update_order(
         )
 
     if user_id:
-        if order_in.status == StatusEnum.CANCELED:
-            if order.status != StatusEnum.PENDING:
+        if order_in.status == OrderStatusEnum.CANCELED:
+            if order.status != OrderStatusEnum.PENDING:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="You can cancel only pending orders.",
                 )
-            order.status = StatusEnum.CANCELED
+            order.status = OrderStatusEnum.CANCELED
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

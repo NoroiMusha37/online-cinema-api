@@ -1,9 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 
-from src.models.order import StatusEnum
+from src.models.order import OrderStatusEnum
 from src.schemas.commons import BasePagination
 
 
@@ -34,7 +34,7 @@ class OrderCreate(BaseModel):
 class OrderBase(BaseModel):
     id: int
     created_at: datetime
-    status: StatusEnum
+    status: OrderStatusEnum
     total_amount: Decimal
     model_config = ConfigDict(from_attributes=True)
 
@@ -52,4 +52,4 @@ class OrderResponse(BasePagination):
 
 
 class OrderUpdate(BaseModel):
-    status: StatusEnum | None = None
+    status: OrderStatusEnum | None = None
