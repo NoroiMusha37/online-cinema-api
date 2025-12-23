@@ -163,20 +163,28 @@ async def checkout_cart(
             detail="The cart is empty."
         )
 
-    purchased_stmt = (
+    blocked_stmt = (
         select(user_movies.c.movie_id)
         .where(user_movies.c.user_id == user_id)
+        .union(
+            select(OrderItem.movie_id)
+            .join(Order)
+            .where(
+                Order.user_id == user_id,
+                Order.status == StatusEnum.PENDING
+            )
+        )
     )
-    purchased_result = await session.execute(purchased_stmt)
-    purchased_ids = set(purchased_result.scalars().all())
+    blocked_result = await session.execute(blocked_stmt)
+    blocked_ids = set(blocked_result.scalars().all())
 
     movies_to_checkout = []
-    total_amount = Decimal(0)
+    total_amount = Decimal("0")
 
     for cart_item in cart.cart_items:
         movie = cart_item.movie
 
-        if not movie or movie.id in purchased_ids:
+        if not movie or movie.id in blocked_ids:
             continue
 
         movies_to_checkout.append({
