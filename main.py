@@ -7,7 +7,8 @@ from src.routers import (
     interactions,
     metadata,
     people,
-    cart
+    cart,
+    order
 )
 
 app = FastAPI()
@@ -19,3 +20,4 @@ app.include_router(interactions.router)
 app.include_router(metadata.router)
 app.include_router(people.people_moderator_router)
 app.include_router(cart.router)
+app.include_router(order.router)

@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.models import Cart, CartItem
-from src.models.movie import user_movies
+from src.models.movie import user_movies, Movie
 from src.models.order import Order, OrderItem, StatusEnum
 from src.schemas.order import OrderUpdate
 from src.crud import cart as cart_crud
@@ -42,10 +42,11 @@ async def get_user_orders(
         size: int,
         session: AsyncSession
 ) -> tuple[Sequence[Order], int]:
-    count = await session.execute(select(
-        func.count(Order.id)
+    count = await session.execute(
+        select(
+            func.count(Order.id))
         .where(Order.user_id == user_id)
-    ))
+    )
     count = count.scalar() or 0
     offset = (page - 1) * size
 
@@ -149,6 +150,7 @@ async def checkout_cart(
         .options(
             selectinload(Cart.cart_items)
             .joinedload(CartItem.movie)
+            .selectinload(Movie.genres)
         )
         .where(Cart.user_id == user_id)
     )
