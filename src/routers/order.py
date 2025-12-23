@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from src.core.database import get_db
-from src.core.deps import get_current_active_user, get_current_moderator
+from src.core.deps import get_current_active_user, get_current_admin
 from src.models import User
 from src.models.order import OrderStatusEnum
 from src.schemas.order import OrderResponse, OrderDetail, OrderUpdate
@@ -67,7 +67,7 @@ async def get_all_orders(
         end_date: datetime | None = Query(None, ge=1888),
         page: int = Query(1, ge=1),
         size: int = Query(20, ge=1, le=100),
-        current_moderator: User = Depends(get_current_moderator),
+        current_admin: User = Depends(get_current_admin),
         session: AsyncSession = Depends(get_db)
 ):
     orders, count = await order_crud.get_all_orders(
@@ -119,7 +119,7 @@ async def cancel_order(
 async def update_order(
         order_id: int,
         order_in: OrderUpdate,
-        current_moderator: User = Depends(get_current_moderator),
+        current_admin: User = Depends(get_current_admin),
         session: AsyncSession = Depends(get_db)
 ):
     return await order_crud.update_order(
