@@ -8,7 +8,8 @@ from src.routers import (
     metadata,
     people,
     cart,
-    order
+    order,
+    payment
 )
 
 app = FastAPI()
@@ -21,3 +22,4 @@ app.include_router(metadata.router)
 app.include_router(people.people_moderator_router)
 app.include_router(cart.router)
 app.include_router(order.router)
+app.include_router(payment.router)
