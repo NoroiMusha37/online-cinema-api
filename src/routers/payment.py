@@ -12,6 +12,7 @@ from src.schemas.payment import PaymentResponse, PaymentDetail
 from src.crud import payment as payment_crud
 from src.services import payment_service
 from src.utils.pagination import paginate
+from src.tasks.email_tasks import send_payment_notification_email_task
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -95,11 +96,18 @@ async def refund_payment(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_db)
 ):
-    return await payment_crud.process_refund(
+    payment =  await payment_crud.process_refund(
         payment_id=payment_id,
         user_id=current_user.id,
         session=session
     )
+
+    send_payment_notification_email_task.delay(
+        email=current_user.email,
+        order_id=payment.order_id,
+        status=payment.status.value,
+    )
+    return payment
 
 
 @router.post("/checkout")
@@ -128,5 +136,11 @@ async def stripe_webhook(
 
     if not payment:
         return {"status": "ignored"}
+
+    send_payment_notification_email_task.delay(
+        email=payment.user.email,
+        order_id=payment.order_id,
+        status=payment.status.value,
+    )
 
     return {"status": "success", "payment_id": payment.id}

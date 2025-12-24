@@ -144,7 +144,7 @@ async def create_payment(
         purchased_movies = []
         for item in order.items:
             session.add(PaymentItem(
-                payment_id = new_payment.id,
+                payment_id=new_payment.id,
                 order_item_id=item.id,
                 price_at_payment=item.price_at_order
             ))
@@ -170,6 +170,7 @@ async def create_payment(
     final_stmt = (
         select(Payment)
         .options(
+            joinedload(Payment.user),
             selectinload(Payment.payment_items)
             .joinedload(PaymentItem.order_item)
             .joinedload(OrderItem.movie)
@@ -261,6 +262,7 @@ async def process_refund(
         final_stmt = (
             select(Payment)
             .options(
+                joinedload(Payment.user),
                 selectinload(Payment.payment_items)
                 .joinedload(PaymentItem.order_item)
                 .joinedload(OrderItem.movie)

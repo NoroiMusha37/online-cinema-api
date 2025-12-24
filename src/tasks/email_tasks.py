@@ -1,3 +1,4 @@
+from anyio.from_thread import run_sync
 from celery import shared_task
 from fastapi_mail import (
     ConnectionConfig,
@@ -8,6 +9,7 @@ from fastapi_mail import (
 
 from src.core.config import settings
 from .commons import run_async_task
+from ..models.payment import PaymentStatusEnum
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -79,3 +81,40 @@ def send_comment_notification_email_task(
     <p>Your comment {comment_id} under the movie {movie_name} got a reply</p>
     """
     run_async_task(send_email(email, "New Reply! [Online Cinema]", body))
+
+
+@shared_task(
+    name="send_payment_notification_email_task",
+    bind=True,
+    max_retries=5,
+    default_retry_delay=300
+)
+def send_payment_notification_email_task(
+        self, email: str, order_id: int, status: str
+):
+    from src.models.payment import PaymentStatusEnum
+    messages = {
+        PaymentStatusEnum.SUCCESSFUL.value: {
+            "subject": "Successful Payment!",
+            "title": "Payment Successful",
+            "msg": f"Your order {order_id} has been paid successfully.",
+        },
+        PaymentStatusEnum.REFUNDED.value: {
+            "subject": "Payment Refunded!",
+            "title": "Payment Refunded",
+            "msg": f"Your order {order_id} has been refunded successfully.",
+        }
+    }
+
+    if status not in messages:
+        return
+
+    data = messages[status]
+    body = f"""
+    <h1>{data["title"]}</h1>
+    <p>{data["msg"]}</p>
+    """
+
+    run_async_task(send_email(
+        email, f"{data["subject"]} [Online Cinema]", body
+    ))
