@@ -3,6 +3,7 @@ from decimal import Decimal
 from enum import Enum
 
 from sqlalchemy import ForeignKey, DateTime, func, Numeric
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
@@ -58,3 +59,7 @@ class PaymentItem(Base):
     order_item: Mapped["OrderItem"] = relationship(
         "OrderItem", back_populates="payment_items"
     )
+
+    @hybrid_property
+    def movie_name(self) -> str:
+        return self.order_item.movie.name

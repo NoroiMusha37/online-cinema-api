@@ -15,7 +15,7 @@ router = APIRouter(prefix="/cart")
 
 
 @router.get("/me", response_model=CartResponse)
-async def get_cart(
+async def get_user_cart(
         page: int = Query(1, ge=1),
         size: int = Query(20, ge=1, le=100),
         current_user: User = Depends(get_current_active_user),
@@ -80,7 +80,7 @@ async def clear_cart(
 
 
 @router.get("/{user_id}", response_model=ModeratorCartResponse)
-async def get_user_cart(
+async def get_certain_user_cart(
         user_id: int,
         page: int = Query(1, ge=1),
         size: int = Query(20, ge=1, le=100),

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -61,10 +59,10 @@ async def get_order_detail(
 
 @router.get("/", response_model=OrderResponse)
 async def get_all_orders(
-        status: OrderStatusEnum | None,
         user_id: int | None = Query(None, ge=1),
-        start_date: datetime | None = Query(None, ge=1888),
-        end_date: datetime | None = Query(None, ge=1888),
+        start_date: int | None = Query(None, ge=1888),
+        end_date: int | None = Query(None, ge=1888),
+        status: OrderStatusEnum | None = Query(None),
         page: int = Query(1, ge=1),
         size: int = Query(20, ge=1, le=100),
         current_admin: User = Depends(get_current_admin),

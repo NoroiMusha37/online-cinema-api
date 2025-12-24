@@ -137,8 +137,15 @@ async def create_order(
         session.add(order_item)
 
     await session.commit()
-    await session.refresh(new_order, attribute_names=["items"])
-    return new_order
+    final_stmt = (
+        select(Order)
+        .options(
+            selectinload(Order.items)
+        )
+        .where(Order.id == new_order.id)
+    )
+    final_stmt = await session.execute(final_stmt)
+    return final_stmt.scalar_one()
 
 
 async def checkout_cart(
@@ -211,8 +218,16 @@ async def checkout_cart(
         session=session
     )
 
-    await session.refresh(new_order, attribute_names=["items"])
-    return new_order
+    final_stmt = (
+        select(Order)
+        .options(
+            selectinload(Order.items)
+            .joinedload(OrderItem.movie)
+        )
+        .where(Order.id == new_order.id)
+    )
+    final_result = await session.execute(final_stmt)
+    return final_result.scalar_one()
 
 
 async def update_order(
