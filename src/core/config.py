@@ -44,4 +44,7 @@ class Settings(BaseSettings):
 
     DOMAIN: str
 
+    STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
+
 settings = Settings()
