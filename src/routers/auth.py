@@ -15,7 +15,7 @@ from src.crud import user as user_crud
 from src.crud import token as token_crud
 from src.tasks.email_tasks import send_activation_email_task
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post(

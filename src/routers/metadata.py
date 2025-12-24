@@ -13,7 +13,7 @@ from src.crud import moderator as moder_crud
 from src.utils.pagination import paginate
 
 
-router = APIRouter()
+router = APIRouter(tags=["Genres & Certifications"])
 
 genre_router = APIRouter(prefix="/genres")
 moderator_router = APIRouter(dependencies=[Depends(get_current_moderator)])

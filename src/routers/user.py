@@ -21,7 +21,7 @@ from src.crud import user as user_crud
 from src.crud import token as token_crud
 from src.tasks.email_tasks import send_reset_password_email_task
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/users", tags=["User"])
 admin_router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 router.include_router(admin_router)

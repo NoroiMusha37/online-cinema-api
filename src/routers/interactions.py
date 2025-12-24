@@ -25,7 +25,7 @@ from src.schemas.movie import MoviePage, MovieQueryParameters
 from src.tasks.email_tasks import send_comment_notification_email_task
 from src.utils.pagination import paginate
 
-router = APIRouter(prefix="/movies")
+router = APIRouter(prefix="/movies", tags=["Interactions"])
 
 @router.get("/me", response_model=MoviePage)
 async def get_purchased_movies(

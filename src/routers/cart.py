@@ -5,13 +5,18 @@ from starlette import status
 from src.core.database import get_db
 from src.core.deps import get_current_active_user, get_current_moderator
 from src.models import User
-from src.schemas.cart import CartResponse, CartItemResponse, CartItemCreate, ModeratorCartResponse
+from src.schemas.cart import (
+    CartResponse,
+    CartItemResponse,
+    CartItemCreate,
+    ModeratorCartResponse
+)
 
 from src.crud import cart as cart_crud
 from src.crud import user as user_crud
 from src.utils.pagination import paginate
 
-router = APIRouter(prefix="/cart")
+router = APIRouter(prefix="/cart", tags=["Cart"])
 
 
 @router.get("/me", response_model=CartResponse)

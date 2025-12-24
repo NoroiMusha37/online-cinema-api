@@ -10,7 +10,9 @@ from src.schemas.moderator import NamedEntityResponse, NamedEntity
 from src.crud import moderator as moder_crud
 
 people_moderator_router = APIRouter(
-    prefix="/people", dependencies=[Depends(get_current_moderator)]
+    prefix="/people",
+    dependencies=[Depends(get_current_moderator)],
+    tags=["Stars & Directors"]
 )
 stars_router = APIRouter(prefix="/stars")
 directors_router = APIRouter(prefix="/directors")

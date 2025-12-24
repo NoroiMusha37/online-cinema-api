@@ -11,7 +11,7 @@ from src.schemas.order import OrderResponse, OrderDetail, OrderUpdate
 from src.crud import order as order_crud
 from src.utils.pagination import paginate
 
-router = APIRouter(prefix="/orders")
+router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
 @router.get("/me", response_model=OrderResponse)

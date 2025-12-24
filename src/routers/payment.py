@@ -13,7 +13,7 @@ from src.crud import payment as payment_crud
 from src.services import payment_service
 from src.utils.pagination import paginate
 
-router = APIRouter(prefix="/payments")
+router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
 @router.get("/me", response_model=PaymentResponse)

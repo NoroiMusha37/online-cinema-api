@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -15,7 +15,7 @@ from src.crud import movie as movie_crud
 from src.crud import moderator as moder_crud
 from src.utils.pagination import paginate
 
-router = APIRouter(prefix="/movies")
+router = APIRouter(prefix="/movies", tags=["Movies"])
 moderator_router = APIRouter(dependencies=[Depends(get_current_moderator)])
 
 router.include_router(moderator_router)
