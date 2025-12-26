@@ -25,5 +25,9 @@ celery_app.conf.beat_schedule = {
     "cleanup-every-hour": {
         "task": "cleanup_expired_tokens",
         "schedule": 3600
+    },
+    "cancel-orders-every-hour": {
+        "task": "cancel_pending_orders",
+        "schedule": 3600
     }
 }
