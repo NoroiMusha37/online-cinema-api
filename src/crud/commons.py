@@ -23,10 +23,11 @@ def apply_filters(stmt: Select, params: "MovieQueryParameters") -> Select:
         ).distinct()
 
     if params.genre_ids:
-        stmt = (stmt.join(Movie.genres)
-                .where(Genre.id.in_(params.genre_ids))
-                .distinct()
-                )
+        stmt = (
+            stmt.join(Movie.genres)
+            .where(Genre.id.in_(params.genre_ids))
+            .distinct()
+        )
     if params.year_from:
         stmt = stmt.where(Movie.year >= params.year_from)
     if params.year_to:
@@ -68,7 +69,7 @@ def apply_filters(stmt: Select, params: "MovieQueryParameters") -> Select:
 
 
 async def filter_movies(
-        stmt: Select, params: "MovieQueryParameters", session: AsyncSession
+    stmt: Select, params: "MovieQueryParameters", session: AsyncSession
 ) -> tuple[Sequence[Movie], int]:
     filtered_stmt = apply_filters(stmt, params)
 
@@ -78,8 +79,7 @@ async def filter_movies(
     count = result_count.scalar() or 0
 
     data_stmt = (
-        filtered_stmt
-        .offset(params.offset)
+        filtered_stmt.offset(params.offset)
         .limit(params.size)
         .options(
             joinedload(Movie.certification),
@@ -93,12 +93,12 @@ async def filter_movies(
 
 
 async def toggle_generic_like(
-        entity_id: int,
-        user_id: int,
-        liked: LikeCreate,
-        Model: type["MovieLike"] | type["CommentLike"],
-        id_field_name: str,
-        session: AsyncSession
+    entity_id: int,
+    user_id: int,
+    liked: LikeCreate,
+    Model: type["MovieLike"] | type["CommentLike"],
+    id_field_name: str,
+    session: AsyncSession,
 ) -> LikeResponse:
     id_column = getattr(Model, id_field_name)
 
@@ -118,11 +118,7 @@ async def toggle_generic_like(
             state = liked.liked
     else:
         spec_kwargs = {id_field_name: entity_id}
-        like = Model(
-            user_id=user_id,
-            like=liked.liked,
-            **spec_kwargs
-        )
+        like = Model(user_id=user_id, like=liked.liked, **spec_kwargs)
         session.add(like)
         action = LikeAction.CREATED
         state = liked.liked

@@ -15,8 +15,8 @@ type MetadataEntity = Certification | Genre | Star | Director
 
 
 async def create_movie(
-        movie_in: MovieCreate,
-        session: AsyncSession,
+    movie_in: MovieCreate,
+    session: AsyncSession,
 ) -> Movie:
     await validation.check_movie_exists(
         name=movie_in.name,
@@ -25,9 +25,7 @@ async def create_movie(
         session=session,
     )
 
-    await validation.validate_certification(
-        movie_in.certification_id, session
-    )
+    await validation.validate_certification(movie_in.certification_id, session)
     genres = await validation.validate_genres(movie_in.genre_ids, session)
     stars = await validation.validate_stars(movie_in.star_ids, session)
     directors = await validation.validate_directors(
@@ -40,7 +38,7 @@ async def create_movie(
         ),
         genres=genres,
         stars=stars,
-        directors=directors
+        directors=directors,
     )
 
     session.add(new_movie)
@@ -49,17 +47,18 @@ async def create_movie(
 
 
 async def update_movie(
-        movie_id: int,
-        movie_in: MovieUpdate,
-        session: AsyncSession,
+    movie_id: int,
+    movie_in: MovieUpdate,
+    session: AsyncSession,
 ) -> Movie:
-    result = await session.execute(select(Movie).where(
-        Movie.id == movie_id
-    ).options(
-        selectinload(Movie.genres),
-        selectinload(Movie.stars),
-        selectinload(Movie.directors),
-    )
+    result = await session.execute(
+        select(Movie)
+        .where(Movie.id == movie_id)
+        .options(
+            selectinload(Movie.genres),
+            selectinload(Movie.stars),
+            selectinload(Movie.directors),
+        )
     )
     movie = result.scalar_one_or_none()
 
@@ -103,29 +102,26 @@ async def update_movie(
 
 
 async def delete_movie(
-        movie_id: int,
-        session: AsyncSession,
+    movie_id: int,
+    session: AsyncSession,
 ) -> None:
-    result = await session.execute(delete(Movie).where(
-        Movie.id == movie_id
-    ))
+    result = await session.execute(delete(Movie).where(Movie.id == movie_id))
     if result.rowcount == 0:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Movie not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found."
         )
 
     await session.commit()
 
 
 async def create_named_entity[T: MetadataEntity](
-        Model: type[T],
-        entity_in: NamedEntity,
-        session: AsyncSession,
+    Model: type[T],
+    entity_in: NamedEntity,
+    session: AsyncSession,
 ) -> T:
-    result = await session.execute(select(Model).where(
-        Model.name == entity_in.name
-    ))
+    result = await session.execute(
+        select(Model).where(Model.name == entity_in.name)
+    )
     entity = result.scalar_one_or_none()
     if entity:
         raise HTTPException(
@@ -143,24 +139,23 @@ async def create_named_entity[T: MetadataEntity](
 
 
 async def update_named_entity[T: MetadataEntity](
-        Model: type[T],
-        entity_id: int,
-        entity_in: NamedEntity,
-        session: AsyncSession,
+    Model: type[T],
+    entity_id: int,
+    entity_in: NamedEntity,
+    session: AsyncSession,
 ) -> T:
-    existing_entity = await session.execute(select(Model).where(
-        Model.name == entity_in.name,
-        Model.id != entity_id
-    ))
+    existing_entity = await session.execute(
+        select(Model).where(
+            Model.name == entity_in.name, Model.id != entity_id
+        )
+    )
     if existing_entity.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Name taken.",
         )
 
-    result = await session.execute(select(Model).where(
-        Model.id == entity_id
-    ))
+    result = await session.execute(select(Model).where(Model.id == entity_id))
     entity = result.scalar_one_or_none()
     if not entity:
         raise HTTPException(
@@ -175,14 +170,14 @@ async def update_named_entity[T: MetadataEntity](
 
 
 async def delete_named_entity[T: MetadataEntity](
-        Model: type[T],
-        entity_id: int,
-        session: AsyncSession,
+    Model: type[T],
+    entity_id: int,
+    session: AsyncSession,
 ) -> None:
     try:
-        result = await session.execute(delete(Model).where(
-            Model.id == entity_id
-        ))
+        result = await session.execute(
+            delete(Model).where(Model.id == entity_id)
+        )
         if result.rowcount == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -195,5 +190,5 @@ async def delete_named_entity[T: MetadataEntity](
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete {Model.__name__}. "
-                   f"It is assigned to at least one movie",
+            f"It is assigned to at least one movie",
         )

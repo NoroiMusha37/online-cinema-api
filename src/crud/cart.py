@@ -13,18 +13,15 @@ from src.schemas.cart import CartCreate, CartItemCreate
 from src.models import Movie
 
 
-async def create_cart(
-        cart_in: CartCreate,
-        session: AsyncSession
-) -> Cart:
-    result = await session.execute(select(Cart).where(
-        Cart.user_id == cart_in.user_id
-    ))
+async def create_cart(cart_in: CartCreate, session: AsyncSession) -> Cart:
+    result = await session.execute(
+        select(Cart).where(Cart.user_id == cart_in.user_id)
+    )
     old_cart = result.scalar_one_or_none()
     if old_cart:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cart already exists."
+            detail="Cart already exists.",
         )
 
     new_cart = Cart(
@@ -37,10 +34,7 @@ async def create_cart(
 
 
 async def get_cart_items(
-        user_id: int,
-        page: int,
-        size: int,
-        session: AsyncSession
+    user_id: int, page: int, size: int, session: AsyncSession
 ) -> tuple[Sequence[CartItem], int]:
     count = await session.execute(
         select(func.count(CartItem.id))
@@ -53,10 +47,7 @@ async def get_cart_items(
     stmt = (
         select(CartItem)
         .join(Cart)
-        .options(
-            joinedload(CartItem.movie)
-            .selectinload(Movie.genres)
-        )
+        .options(joinedload(CartItem.movie).selectinload(Movie.genres))
         .where(Cart.user_id == user_id)
         .offset(offset)
         .limit(size)
@@ -66,43 +57,36 @@ async def get_cart_items(
     return cart_items, count
 
 
-async def clear_cart(
-        user_id: int,
-        session: AsyncSession
-) -> None:
-    stmt = (
-        delete(CartItem)
-        .where(
-            CartItem.cart_id == select(Cart.id)
-            .where(Cart.user_id == user_id)
-            .scalar_subquery()
-        ))
+async def clear_cart(user_id: int, session: AsyncSession) -> None:
+    stmt = delete(CartItem).where(
+        CartItem.cart_id
+        == select(Cart.id).where(Cart.user_id == user_id).scalar_subquery()
+    )
 
     await session.execute(stmt)
     await session.commit()
 
 
 async def create_cart_item(
-        cart_item_in: CartItemCreate,
-        user_id: int,
-        session: AsyncSession
+    cart_item_in: CartItemCreate, user_id: int, session: AsyncSession
 ) -> CartItem | None:
     old_cart_item = await session.execute(
         select(CartItem)
         .join(Cart)
         .where(
-            Cart.user_id == user_id,
-            CartItem.movie_id == cart_item_in.movie_id
+            Cart.user_id == user_id, CartItem.movie_id == cart_item_in.movie_id
         )
     )
     if old_cart_item.scalar_one_or_none():
         return None
 
     purchased_item = await session.execute(
-        select(exists().where(
-            user_movies.c.user_id == user_id,
-            user_movies.c.movie_id == cart_item_in.movie_id
-        ))
+        select(
+            exists().where(
+                user_movies.c.user_id == user_id,
+                user_movies.c.movie_id == cart_item_in.movie_id,
+            )
+        )
     )
     if purchased_item.scalar():
         return None
@@ -116,10 +100,12 @@ async def create_cart_item(
     if not movie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Movie doesn't exist."
+            detail="Movie doesn't exist.",
         )
 
-    cart_result = await session.execute(select(Cart).where(Cart.user_id == user_id))
+    cart_result = await session.execute(
+        select(Cart).where(Cart.user_id == user_id)
+    )
     cart = cart_result.scalar_one_or_none()
     if not cart:
         cart = Cart(user_id=user_id)
@@ -127,9 +113,7 @@ async def create_cart_item(
         await session.flush()
 
     new_cart_item = CartItem(
-        cart_id=cart.id,
-        movie_id=cart_item_in.movie_id,
-        movie=movie
+        cart_id=cart.id, movie_id=cart_item_in.movie_id, movie=movie
     )
     session.add(new_cart_item)
     await session.commit()
@@ -138,18 +122,12 @@ async def create_cart_item(
 
 
 async def delete_cart_item(
-        user_id: int,
-        cart_item_id: int,
-        session: AsyncSession
+    user_id: int, cart_item_id: int, session: AsyncSession
 ) -> None:
-    stmt = (
-        delete(CartItem)
-        .where(
-            CartItem.id == cart_item_id,
-            CartItem.cart_id == (
-                select(Cart.id).where(Cart.user_id == user_id).scalar_subquery()
-            )
-        )
+    stmt = delete(CartItem).where(
+        CartItem.id == cart_item_id,
+        CartItem.cart_id
+        == (select(Cart.id).where(Cart.user_id == user_id).scalar_subquery()),
     )
 
     result = await session.execute(stmt)
@@ -157,7 +135,7 @@ async def delete_cart_item(
     if result.rowcount == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="There is no such movie in the cart."
+            detail="There is no such movie in the cart.",
         )
 
     await session.commit()

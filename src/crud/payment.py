@@ -17,10 +17,7 @@ from src.schemas.payment import PaymentCreate
 from src.crud import order as order_crud
 
 
-async def get_payment_by_id(
-        payment_id: int,
-        session: AsyncSession
-) -> Payment:
+async def get_payment_by_id(payment_id: int, session: AsyncSession) -> Payment:
     stmt = (
         select(Payment)
         .options(
@@ -35,10 +32,7 @@ async def get_payment_by_id(
 
 
 async def get_user_payments(
-        user_id: int,
-        page: int,
-        size: int,
-        session: AsyncSession
+    user_id: int, page: int, size: int, session: AsyncSession
 ) -> tuple[Sequence[Payment], int]:
     count = await session.execute(
         select(func.count(Payment.id)).where(Payment.user_id == user_id)
@@ -65,22 +59,19 @@ async def get_user_payments(
 
 
 async def get_all_payments(
-        page: int,
-        size: int,
-        session: AsyncSession,
-        user_id: int | None = None,
-        start_date: datetime | None = None,
-        end_date: datetime | None = None,
-        status: PaymentStatusEnum | None = None
+    page: int,
+    size: int,
+    session: AsyncSession,
+    user_id: int | None = None,
+    start_date: int | None = None,
+    end_date: int | None = None,
+    status: PaymentStatusEnum | None = None,
 ) -> tuple[Sequence[Payment], int]:
-    count_stmt = (select(func.count(Payment.id)))
-    stmt = (
-        select(Payment)
-        .options(
-            selectinload(Payment.payment_items)
-            .joinedload(PaymentItem.order_item)
-            .joinedload(OrderItem.movie)
-        )
+    count_stmt = select(func.count(Payment.id))
+    stmt = select(Payment).options(
+        selectinload(Payment.payment_items)
+        .joinedload(PaymentItem.order_item)
+        .joinedload(OrderItem.movie)
     )
 
     filters = []
@@ -101,12 +92,7 @@ async def get_all_payments(
     count = count_result.scalar() or 0
     offset = (page - 1) * size
 
-    stmt = (
-        stmt
-        .order_by(Payment.created_at.desc())
-        .offset(offset)
-        .limit(size)
-    )
+    stmt = stmt.order_by(Payment.created_at.desc()).offset(offset).limit(size)
 
     result = await session.execute(stmt)
     payments = result.scalars().all()
@@ -115,8 +101,8 @@ async def get_all_payments(
 
 
 async def create_payment(
-        payment_in: PaymentCreate,
-        session: AsyncSession,
+    payment_in: PaymentCreate,
+    session: AsyncSession,
 ) -> Payment:
     order = await order_crud.get_order_by_id(
         order_id=payment_in.order_id,
@@ -135,7 +121,7 @@ async def create_payment(
         order_id=payment_in.order_id,
         amount=payment_in.amount,
         external_payment_id=payment_in.external_payment_id,
-        status=payment_in.status
+        status=payment_in.status,
     )
     session.add(new_payment)
     await session.flush()
@@ -143,16 +129,20 @@ async def create_payment(
     if payment_in.status == PaymentStatusEnum.SUCCESSFUL:
         purchased_movies = []
         for item in order.items:
-            session.add(PaymentItem(
-                payment_id=new_payment.id,
-                order_item_id=item.id,
-                price_at_payment=item.price_at_order
-            ))
+            session.add(
+                PaymentItem(
+                    payment_id=new_payment.id,
+                    order_item_id=item.id,
+                    price_at_payment=item.price_at_order,
+                )
+            )
 
-            purchased_movies.append({
-                "user_id": payment_in.user_id,
-                "movie_id": item.movie_id,
-            })
+            purchased_movies.append(
+                {
+                    "user_id": payment_in.user_id,
+                    "movie_id": item.movie_id,
+                }
+            )
 
         if purchased_movies:
             await session.execute(
@@ -173,7 +163,7 @@ async def create_payment(
             joinedload(Payment.user),
             selectinload(Payment.payment_items)
             .joinedload(PaymentItem.order_item)
-            .joinedload(OrderItem.movie)
+            .joinedload(OrderItem.movie),
         )
         .where(Payment.id == new_payment.id)
     )
@@ -182,9 +172,9 @@ async def create_payment(
 
 
 async def process_refund(
-        user_id: int,
-        payment_id: int,
-        session: AsyncSession,
+    user_id: int,
+    payment_id: int,
+    session: AsyncSession,
 ) -> Payment:
     stmt = (
         select(Payment)
@@ -192,7 +182,7 @@ async def process_refund(
             selectinload(Payment.payment_items)
             .joinedload(PaymentItem.order_item)
             .joinedload(OrderItem.movie),
-            joinedload(Payment.order)
+            joinedload(Payment.order),
         )
         .where(
             Payment.user_id == user_id,
@@ -215,8 +205,7 @@ async def process_refund(
         )
 
     refunded_payments = await session.execute(
-        select(func.count(Payment.id))
-        .where(
+        select(func.count(Payment.id)).where(
             Payment.order_id == payment.order_id,
             Payment.status == PaymentStatusEnum.REFUNDED,
         )
@@ -242,16 +231,17 @@ async def process_refund(
 
         movie_ids = []
         for item in payment.payment_items:
-            session.add(PaymentItem(
-                payment_id=refund.id,
-                order_item_id=item.order_item_id,
-                price_at_payment=-item.price_at_payment,
-            ))
+            session.add(
+                PaymentItem(
+                    payment_id=refund.id,
+                    order_item_id=item.order_item_id,
+                    price_at_payment=-item.price_at_payment,
+                )
+            )
             movie_ids.append(item.order_item.movie_id)
 
         await session.execute(
-            delete(user_movies)
-            .where(
+            delete(user_movies).where(
                 user_movies.c.user_id == user_id,
                 user_movies.c.movie_id.in_(movie_ids),
             )
@@ -265,7 +255,7 @@ async def process_refund(
                 joinedload(Payment.user),
                 selectinload(Payment.payment_items)
                 .joinedload(PaymentItem.order_item)
-                .joinedload(OrderItem.movie)
+                .joinedload(OrderItem.movie),
             )
             .where(Payment.id == refund.id)
         )

@@ -16,20 +16,12 @@ from src.crud import cart as cart_crud
 
 
 async def get_order_by_id(
-        order_id: int,
-        user_id: int,
-        session: AsyncSession
+    order_id: int, user_id: int, session: AsyncSession
 ) -> Order | None:
     stmt = (
         select(Order)
-        .options(
-            selectinload(Order.items)
-            .joinedload(OrderItem.movie)
-        )
-        .where(
-            Order.id == order_id,
-            Order.user_id == user_id
-        )
+        .options(selectinload(Order.items).joinedload(OrderItem.movie))
+        .where(Order.id == order_id, Order.user_id == user_id)
     )
 
     order = await session.execute(stmt)
@@ -37,25 +29,17 @@ async def get_order_by_id(
 
 
 async def get_user_orders(
-        user_id: int,
-        page: int,
-        size: int,
-        session: AsyncSession
+    user_id: int, page: int, size: int, session: AsyncSession
 ) -> tuple[Sequence[Order], int]:
     count = await session.execute(
-        select(
-            func.count(Order.id))
-        .where(Order.user_id == user_id)
+        select(func.count(Order.id)).where(Order.user_id == user_id)
     )
     count = count.scalar() or 0
     offset = (page - 1) * size
 
     stmt = (
         select(Order)
-        .options(
-            selectinload(Order.items)
-            .joinedload(OrderItem.movie)
-        )
+        .options(selectinload(Order.items).joinedload(OrderItem.movie))
         .where(Order.user_id == user_id)
         .order_by(Order.created_at.desc())
         .offset(offset)
@@ -68,21 +52,17 @@ async def get_user_orders(
 
 
 async def get_all_orders(
-        page: int,
-        size: int,
-        session: AsyncSession,
-        user_id: int | None = None,
-        status: OrderStatusEnum | None = None,
-        start_date: datetime | None = None,
-        end_date: datetime | None = None
+    page: int,
+    size: int,
+    session: AsyncSession,
+    user_id: int | None = None,
+    status: OrderStatusEnum | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
 ) -> tuple[Sequence[Order], int]:
     count_stmt = select(func.count(Order.id))
-    stmt = (
-        select(Order)
-        .options(
-            selectinload(Order.items)
-            .joinedload(OrderItem.movie)
-        )
+    stmt = select(Order).options(
+        selectinload(Order.items).joinedload(OrderItem.movie)
     )
 
     filters = []
@@ -102,12 +82,7 @@ async def get_all_orders(
     count_result = await session.execute(count_stmt)
     count = count_result.scalar() or 0
     offset = (page - 1) * size
-    stmt = (
-        stmt
-        .order_by(Order.created_at.desc())
-        .offset(offset)
-        .limit(size)
-    )
+    stmt = stmt.order_by(Order.created_at.desc()).offset(offset).limit(size)
 
     result = await session.execute(stmt)
     orders = result.scalars().all()
@@ -116,15 +91,12 @@ async def get_all_orders(
 
 
 async def create_order(
-        user_id: int,
-        total_amount: Decimal,
-        items_data: list[dict],
-        session: AsyncSession,
+    user_id: int,
+    total_amount: Decimal,
+    items_data: list[dict],
+    session: AsyncSession,
 ) -> Order:
-    new_order = Order(
-        user_id=user_id,
-        total_amount=total_amount
-    )
+    new_order = Order(user_id=user_id, total_amount=total_amount)
     session.add(new_order)
     await session.flush()
 
@@ -139,9 +111,7 @@ async def create_order(
     await session.commit()
     final_stmt = (
         select(Order)
-        .options(
-            selectinload(Order.items)
-        )
+        .options(selectinload(Order.items))
         .where(Order.id == new_order.id)
     )
     final_stmt = await session.execute(final_stmt)
@@ -149,8 +119,8 @@ async def create_order(
 
 
 async def checkout_cart(
-        user_id: int,
-        session: AsyncSession,
+    user_id: int,
+    session: AsyncSession,
 ):
     cart_stmt = (
         select(Cart)
@@ -167,7 +137,7 @@ async def checkout_cart(
     if not cart or not cart.cart_items:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The cart is empty."
+            detail="The cart is empty.",
         )
 
     blocked_stmt = (
@@ -178,7 +148,7 @@ async def checkout_cart(
             .join(Order)
             .where(
                 Order.user_id == user_id,
-                Order.status == OrderStatusEnum.PENDING
+                Order.status == OrderStatusEnum.PENDING,
             )
         )
     )
@@ -194,36 +164,32 @@ async def checkout_cart(
         if not movie or movie.id in blocked_ids:
             continue
 
-        movies_to_checkout.append({
-            "movie_id": movie.id,
-            "price": movie.price,
-        })
+        movies_to_checkout.append(
+            {
+                "movie_id": movie.id,
+                "price": movie.price,
+            }
+        )
         total_amount += movie.price
 
     if not movies_to_checkout:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="All movies are either already purchased "
-                   "or not available."
+            "or not available.",
         )
 
     new_order = await create_order(
         user_id=user_id,
         total_amount=total_amount,
         items_data=movies_to_checkout,
-        session=session
+        session=session,
     )
-    await cart_crud.clear_cart(
-        user_id=user_id,
-        session=session
-    )
+    await cart_crud.clear_cart(user_id=user_id, session=session)
 
     final_stmt = (
         select(Order)
-        .options(
-            selectinload(Order.items)
-            .joinedload(OrderItem.movie)
-        )
+        .options(selectinload(Order.items).joinedload(OrderItem.movie))
         .where(Order.id == new_order.id)
     )
     final_result = await session.execute(final_stmt)
@@ -231,17 +197,14 @@ async def checkout_cart(
 
 
 async def update_order(
-        order_id: int,
-        order_in: OrderUpdate,
-        session: AsyncSession,
-        user_id: int | None = None
+    order_id: int,
+    order_in: OrderUpdate,
+    session: AsyncSession,
+    user_id: int | None = None,
 ):
     stmt = (
         select(Order)
-        .options(
-            selectinload(Order.items)
-            .joinedload(OrderItem.movie)
-        )
+        .options(selectinload(Order.items).joinedload(OrderItem.movie))
         .where(Order.id == order_id)
     )
 

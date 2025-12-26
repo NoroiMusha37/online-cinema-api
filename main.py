@@ -9,7 +9,7 @@ from src.routers import (
     people,
     cart,
     order,
-    payment
+    payment,
 )
 
 app = FastAPI()

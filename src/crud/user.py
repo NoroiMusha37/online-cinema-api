@@ -9,21 +9,17 @@ from src.models.user import User, UserGroup, UserGroupEnum, UserProfile
 from src.schemas.user import UserCreate, UserProfileUpdate, UserUpdateAdmin
 
 
-async def get_user_by_email(
-        email: str, session: AsyncSession
-) -> User | None:
+async def get_user_by_email(email: str, session: AsyncSession) -> User | None:
     result = await session.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
 
 async def get_user_by_id(user_id: int, session: AsyncSession) -> User | None:
-    result = await session.execute(select(User)
-                                   .options(
-        selectinload(User.group),
-        selectinload(User.profile)
+    result = await session.execute(
+        select(User)
+        .options(selectinload(User.group), selectinload(User.profile))
+        .where(User.id == user_id)
     )
-                                   .where(User.id == user_id)
-                                   )
     return result.scalar_one_or_none()
 
 
@@ -31,11 +27,12 @@ async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
     if await get_user_by_email(user_in.email, session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Email already registered",
         )
 
-    result = await session.execute(select(UserGroup)
-                                   .where(UserGroup.name == "USER"))
+    result = await session.execute(
+        select(UserGroup).where(UserGroup.name == "USER")
+    )
     group = result.scalar_one_or_none()
     if not group:
         group = UserGroup(name=UserGroupEnum.USER)
@@ -49,7 +46,7 @@ async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
         profile=UserProfile(
             first_name="",
             last_name="",
-        )
+        ),
     )
 
     session.add(user)
@@ -59,54 +56,56 @@ async def create_user(user_in: UserCreate, session: AsyncSession) -> User:
 
 
 async def update_password(
-        user_id: int,
-        new_password: str,
-        session: AsyncSession
+    user_id: int, new_password: str, session: AsyncSession
 ) -> None:
-    await session.execute(update(User)
-                          .where(User.id == user_id)
-                          .values(hashed_password=new_password)
-                          )
+    await session.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(hashed_password=new_password)
+    )
     await session.commit()
 
 
 async def get_profile_by_user_id(
-        user_id: int, session: AsyncSession
+    user_id: int, session: AsyncSession
 ) -> UserProfile | None:
-    result = await session.execute(select(UserProfile)
-                                   .where(UserProfile.user_id == user_id))
+    result = await session.execute(
+        select(UserProfile).where(UserProfile.user_id == user_id)
+    )
     return result.scalar_one_or_none()
 
 
 async def update_profile(
-        user_id: int, profile_in: UserProfileUpdate, session: AsyncSession
+    user_id: int, profile_in: UserProfileUpdate, session: AsyncSession
 ) -> UserProfile | None:
     update_data = profile_in.model_dump(exclude_unset=True)
     if not update_data:
         return await get_profile_by_user_id(user_id, session)
 
-    await session.execute(update(UserProfile)
-                          .where(UserProfile.user_id == user_id)
-                          .values(**update_data)
-                          .execution_options(synchronize_session="fetch")
-                          )
+    await session.execute(
+        update(UserProfile)
+        .where(UserProfile.user_id == user_id)
+        .values(**update_data)
+        .execution_options(synchronize_session="fetch")
+    )
     await session.commit()
 
     return await get_profile_by_user_id(user_id, session)
 
 
 async def update_user_admin(
-        user_id: int, user_in: UserUpdateAdmin, session: AsyncSession
+    user_id: int, user_in: UserUpdateAdmin, session: AsyncSession
 ) -> User | None:
     update_data = user_in.model_dump(exclude_unset=True)
     if not update_data:
         return await get_user_by_id(user_id, session)
 
-    await session.execute(update(User)
-                          .where(User.id == user_id)
-                          .values(**update_data)
-                          .execution_options(synchronize_session="fetch")
-                          )
+    await session.execute(
+        update(User)
+        .where(User.id == user_id)
+        .values(**update_data)
+        .execution_options(synchronize_session="fetch")
+    )
 
     await session.commit()
     return await get_user_by_id(user_id, session)

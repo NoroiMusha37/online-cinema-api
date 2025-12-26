@@ -2,8 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 
 from sqlalchemy import ForeignKey, func, DateTime
-from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy.testing.schema import mapped_column
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from src.core.database import Base
 
@@ -37,12 +36,10 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    group_id: Mapped[int] = mapped_column(ForeignKey(
-        "user_groups.id", ondelete="CASCADE")
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey("user_groups.id", ondelete="CASCADE")
     )
 
     group: Mapped[UserGroup] = relationship(
@@ -52,19 +49,19 @@ class User(Base):
         "UserProfile",
         back_populates="user",
         uselist=False,
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
     activation_token: Mapped["ActivationToken"] = relationship(
         "ActivationToken",
         back_populates="user",
         cascade="all, delete-orphan",
-        uselist=False
+        uselist=False,
     )
     password_reset_token: Mapped["PasswordResetToken"] = relationship(
         "PasswordResetToken",
         back_populates="user",
         cascade="all, delete-orphan",
-        uselist=False
+        uselist=False,
     )
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"

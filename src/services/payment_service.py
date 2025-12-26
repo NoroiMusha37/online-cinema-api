@@ -16,9 +16,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 async def initiate_checkout_session(
-        order_id: int,
-        user_id: int,
-        session: AsyncSession,
+    order_id: int,
+    user_id: int,
+    session: AsyncSession,
 ) -> str:
     order = await order_crud.get_order_by_id(
         order_id=order_id,
@@ -40,14 +40,16 @@ async def initiate_checkout_session(
     try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
-            line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {"name": f"Order #{order.id}"},
-                    "unit_amount": int(order.total_amount * 100)
-                },
-                "quantity": 1
-            }],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {"name": f"Order #{order.id}"},
+                        "unit_amount": int(order.total_amount * 100),
+                    },
+                    "quantity": 1,
+                }
+            ],
             mode="payment",
             metadata={
                 "user_id": str(user_id),
@@ -64,21 +66,19 @@ async def initiate_checkout_session(
         )
         return checkout_session.url
 
-
     except stripe.error.StripeError:
         raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY,
-            detail=f"Payment provider error."
+            status.HTTP_502_BAD_GATEWAY, detail=f"Payment provider error."
         )
     except Exception:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error."
+            detail="Internal server error.",
         )
 
 
 async def handle_stripe_webhook(
-        request: Request, session: AsyncSession
+    request: Request, session: AsyncSession
 ) -> Payment | None:
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
@@ -113,7 +113,7 @@ async def handle_stripe_webhook(
         order_id=int(order_id),
         amount=obj["amount_total"] / 100,
         external_payment_id=obj["payment_intent"],
-        status=internal_status
+        status=internal_status,
     )
 
     return await payment_crud.create_payment(

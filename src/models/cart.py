@@ -40,14 +40,8 @@ class CartItem(Base):
         "Cart",
         back_populates="cart_items",
     )
-    movie: Mapped["Movie"] = relationship(
-        "Movie", back_populates="cart_items"
-    )
+    movie: Mapped["Movie"] = relationship("Movie", back_populates="cart_items")
 
     __table_args__ = (
-        UniqueConstraint(
-            "cart_id",
-            "movie_id",
-            name="uq_together_movie_cart"
-        ),
+        UniqueConstraint("cart_id", "movie_id", name="uq_together_movie_cart"),
     )

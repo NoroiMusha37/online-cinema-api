@@ -22,9 +22,9 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     "/register", response_model=UserRead, status_code=status.HTTP_201_CREATED
 )
 async def register(
-        user_in: UserCreate,
-        background_tasks: BackgroundTasks,
-        session: AsyncSession = Depends(get_db)
+    user_in: UserCreate,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
 ):
     user = await user_crud.create_user(user_in=user_in, session=session)
     token_str = secrets.token_urlsafe(32)
@@ -41,15 +41,15 @@ async def register(
 
 @router.post("/login", response_model=Token)
 async def login(
-        form_data: OAuth2PasswordRequestForm = Depends(),
-        session: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_db),
 ):
     user = await user_crud.get_user_by_email(
         email=form_data.username, session=session
     )
 
     if not user or not verify_password(
-            form_data.password, str(user.hashed_password)
+        form_data.password, str(user.hashed_password)
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,7 +61,7 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user."
-                   "Please check your email for activation link.",
+            "Please check your email for activation link.",
         )
 
     access_token = create_access_token(user_id=user.id)
@@ -75,14 +75,14 @@ async def login(
     return Token(
         access_token=access_token,
         refresh_token=refresh_token_str,
-        token_type="bearer"
+        token_type="bearer",
     )
 
 
 @router.post("/refresh", response_model=Token)
 async def refresh_tokens(
-        refresh_token: str = Body(..., embed=True),
-        session: AsyncSession = Depends(get_db),
+    refresh_token: str = Body(..., embed=True),
+    session: AsyncSession = Depends(get_db),
 ):
     db_token = await token_crud.get_refresh_token(
         token=refresh_token, session=session
@@ -113,19 +113,17 @@ async def refresh_tokens(
 
 @router.post("/logout")
 async def logout(
-        refresh_token: str = Body(..., embed=True),
-        session: AsyncSession = Depends(get_db),
+    refresh_token: str = Body(..., embed=True),
+    session: AsyncSession = Depends(get_db),
 ):
-    await token_crud.delete_refresh_token(
-        token=refresh_token, session=session
-    )
+    await token_crud.delete_refresh_token(token=refresh_token, session=session)
     return {"message": "Successfully logged out"}
 
 
 @router.post("/activate")
 async def activate_account(
-        token: str,
-        session: AsyncSession = Depends(get_db),
+    token: str,
+    session: AsyncSession = Depends(get_db),
 ):
     activation_token = await token_crud.get_activation_token(
         token=token, session=session

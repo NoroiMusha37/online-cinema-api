@@ -21,9 +21,11 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        return (f"postgresql+asyncpg://{self.POSTGRES_USER}:"
-                f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
-                f"{self.POSTGRES_PORT}/{self.POSTGRES_NAME}")
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
+            f"{self.POSTGRES_PORT}/{self.POSTGRES_NAME}"
+        )
 
     SECRET_KEY: str
     JWT_ENCODING_ALGORITHM: str = "HS256"
@@ -46,5 +48,6 @@ class Settings(BaseSettings):
 
     STRIPE_SECRET_KEY: str
     STRIPE_WEBHOOK_SECRET: str
+
 
 settings = Settings()

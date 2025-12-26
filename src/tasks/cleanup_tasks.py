@@ -12,8 +12,9 @@ from ..models.order import OrderStatusEnum
 async def cleanup():
     async with SessionLocal() as session:
         result = await session.execute(
-            delete(ActivationToken)
-            .where(ActivationToken.expires_at < datetime.now(timezone.utc))
+            delete(ActivationToken).where(
+                ActivationToken.expires_at < datetime.now(timezone.utc)
+            )
         )
 
         await session.commit()
@@ -28,7 +29,7 @@ async def cancel_orders():
             update(Order)
             .where(
                 Order.created_at < threshold,
-                Order.status == OrderStatusEnum.PENDING
+                Order.status == OrderStatusEnum.PENDING,
             )
             .values(status=OrderStatusEnum.CANCELED)
         )

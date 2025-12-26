@@ -1,11 +1,6 @@
 from anyio.from_thread import run_sync
 from celery import shared_task
-from fastapi_mail import (
-    ConnectionConfig,
-    MessageSchema,
-    FastMail,
-    MessageType
-)
+from fastapi_mail import ConnectionConfig, MessageSchema, FastMail, MessageType
 
 from src.core.config import settings
 from .commons import run_async_task
@@ -41,23 +36,21 @@ async def send_email(email_to: str, subject: str, body: str):
     name="send_activation_email_task",
     bind=True,
     max_retries=5,
-    default_retry_delay=300
+    default_retry_delay=300,
 )
 def send_activation_email_task(self, email: str, token: str):
     body = f"""
     <h1>Activation Email</h1>
     <p>Your activation token: {token}
     """
-    run_async_task(send_email(
-        email, "Activate Account [Online Cinema]", body
-    ))
+    run_async_task(send_email(email, "Activate Account [Online Cinema]", body))
 
 
 @shared_task(
     name="send_reset_password_email_task",
     bind=True,
     max_retries=5,
-    default_retry_delay=300
+    default_retry_delay=300,
 )
 def send_reset_password_email_task(self, email: str, token: str):
     body = f"""
@@ -71,10 +64,10 @@ def send_reset_password_email_task(self, email: str, token: str):
     name="send_comment_notification_email_task",
     bind=True,
     max_retries=5,
-    default_retry_delay=300
+    default_retry_delay=300,
 )
 def send_comment_notification_email_task(
-        self, email: str, comment_id: int, movie_name: str
+    self, email: str, comment_id: int, movie_name: str
 ):
     body = f"""
     <h1>Someone Replied To Your Comment</h1>
@@ -87,12 +80,13 @@ def send_comment_notification_email_task(
     name="send_payment_notification_email_task",
     bind=True,
     max_retries=5,
-    default_retry_delay=300
+    default_retry_delay=300,
 )
 def send_payment_notification_email_task(
-        self, email: str, order_id: int, status: str
+    self, email: str, order_id: int, status: str
 ):
     from src.models.payment import PaymentStatusEnum
+
     messages = {
         PaymentStatusEnum.SUCCESSFUL.value: {
             "subject": "Successful Payment!",
@@ -103,7 +97,7 @@ def send_payment_notification_email_task(
             "subject": "Payment Refunded!",
             "title": "Payment Refunded",
             "msg": f"Your order {order_id} has been refunded successfully.",
-        }
+        },
     }
 
     if status not in messages:
@@ -115,6 +109,6 @@ def send_payment_notification_email_task(
     <p>{data["msg"]}</p>
     """
 
-    run_async_task(send_email(
-        email, f"{data["subject"]} [Online Cinema]", body
-    ))
+    run_async_task(
+        send_email(email, f"{data["subject"]} [Online Cinema]", body)
+    )

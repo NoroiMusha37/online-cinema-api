@@ -4,7 +4,7 @@ from .user import (
     UserProfile,
     ActivationToken,
     PasswordResetToken,
-    RefreshToken
+    RefreshToken,
 )
 from .movie import Genre, Star, Director, Certification, Movie
 from .interactions import MovieLike, Comment, Rating, CommentLike

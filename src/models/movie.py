@@ -13,12 +13,12 @@ movie_genres = Table(
     Column(
         "movie_id",
         ForeignKey("movies.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     ),
     Column(
         "genre_id",
         ForeignKey("genres.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     ),
 )
 
@@ -28,12 +28,12 @@ movie_directors = Table(
     Column(
         "movie_id",
         ForeignKey("movies.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     ),
     Column(
         "director_id",
         ForeignKey("directors.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     ),
 )
 
@@ -43,12 +43,10 @@ movie_stars = Table(
     Column(
         "movie_id",
         ForeignKey("movies.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     ),
     Column(
-        "star_id",
-        ForeignKey("stars.id", ondelete="CASCADE"),
-        primary_key=True
+        "star_id", ForeignKey("stars.id", ondelete="CASCADE"), primary_key=True
     ),
 )
 
@@ -56,14 +54,12 @@ user_favorites = Table(
     "user_favorites",
     Base.metadata,
     Column(
-        "user_id",
-        ForeignKey("users.id", ondelete="CASCADE"),
-        primary_key=True
+        "user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     ),
     Column(
         "movie_id",
         ForeignKey("movies.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     ),
 )
 
@@ -71,15 +67,13 @@ user_movies = Table(
     "user_movies",
     Base.metadata,
     Column(
-        "user_id",
-        ForeignKey("users.id", ondelete="CASCADE"),
-        primary_key=True
+        "user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     ),
     Column(
         "movie_id",
         ForeignKey("movies.id", ondelete="CASCADE"),
-        primary_key=True
-    )
+        primary_key=True,
+    ),
 )
 
 
@@ -134,9 +128,9 @@ class Movie(Base):
     gross: Mapped[float | None]
     description: Mapped[str]
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
-    certification_id: Mapped[int] = mapped_column(ForeignKey(
-        "certifications.id"
-    ))
+    certification_id: Mapped[int] = mapped_column(
+        ForeignKey("certifications.id")
+    )
     certification: Mapped[Certification] = relationship(
         "Certification", back_populates="movies"
     )
@@ -171,16 +165,12 @@ class Movie(Base):
         "OrderItem", back_populates="movie"
     )
 
-
     @hybrid_property
     def certification_name(self) -> str:
         return self.certification.name
 
     __table_args__ = (
         UniqueConstraint(
-            "name",
-            "year",
-            "time",
-            name="uq_together_name_year_time"
+            "name", "year", "time", name="uq_together_name_year_time"
         ),
     )

@@ -12,7 +12,7 @@ from src.crud import moderator as moder_crud
 people_moderator_router = APIRouter(
     prefix="/people",
     dependencies=[Depends(get_current_moderator)],
-    tags=["Stars & Directors"]
+    tags=["Stars & Directors"],
 )
 stars_router = APIRouter(prefix="/stars")
 directors_router = APIRouter(prefix="/directors")
@@ -23,7 +23,7 @@ people_moderator_router.include_router(directors_router)
 
 @stars_router.post("/", response_model=NamedEntityResponse)
 async def create_star(
-        star_in: NamedEntity, session: AsyncSession = Depends(get_db)
+    star_in: NamedEntity, session: AsyncSession = Depends(get_db)
 ):
     return await moder_crud.create_named_entity(
         Model=Star,
@@ -34,9 +34,7 @@ async def create_star(
 
 @stars_router.patch("/{star_id}", response_model=NamedEntityResponse)
 async def update_star(
-        star_id: int,
-        star_in: NamedEntity,
-        session: AsyncSession = Depends(get_db)
+    star_id: int, star_in: NamedEntity, session: AsyncSession = Depends(get_db)
 ):
     return await moder_crud.update_named_entity(
         Model=Star,
@@ -47,10 +45,7 @@ async def update_star(
 
 
 @stars_router.delete("/{star_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_star(
-        star_id: int,
-        session: AsyncSession = Depends(get_db)
-):
+async def delete_star(star_id: int, session: AsyncSession = Depends(get_db)):
     await moder_crud.delete_named_entity(
         Model=Star,
         entity_id=star_id,
@@ -60,7 +55,7 @@ async def delete_star(
 
 @directors_router.post("/", response_model=NamedEntityResponse)
 async def create_director(
-        director_in: NamedEntity, session: AsyncSession = Depends(get_db)
+    director_in: NamedEntity, session: AsyncSession = Depends(get_db)
 ):
     return await moder_crud.create_named_entity(
         Model=Director,
@@ -71,9 +66,9 @@ async def create_director(
 
 @directors_router.patch("/{director_id}", response_model=NamedEntityResponse)
 async def update_director(
-        director_id: int,
-        director_in: NamedEntity,
-        session: AsyncSession = Depends(get_db)
+    director_id: int,
+    director_in: NamedEntity,
+    session: AsyncSession = Depends(get_db),
 ):
     return await moder_crud.update_named_entity(
         Model=Director,
@@ -87,8 +82,7 @@ async def update_director(
     "/{director_id}", status_code=status.HTTP_204_NO_CONTENT
 )
 async def delete_director(
-        director_id: int,
-        session: AsyncSession = Depends(get_db)
+    director_id: int, session: AsyncSession = Depends(get_db)
 ):
     await moder_crud.delete_named_entity(
         Model=Director,
