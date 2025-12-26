@@ -1,10 +1,8 @@
-from anyio.from_thread import run_sync
 from celery import shared_task
 from fastapi_mail import ConnectionConfig, MessageSchema, FastMail, MessageType
 
 from src.core.config import settings
 from .commons import run_async_task
-from ..models.payment import PaymentStatusEnum
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,

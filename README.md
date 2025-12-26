@@ -1,84 +1,107 @@
 Online Cinema API 🎬
-Online Cinema API is a high-performance, asynchronous digital platform built with FastAPI.
-It serves as a robust backend engine for a movie streaming and distribution service, allowing users to
-browse, rate, and purchase access to video content through a secure and scalable architecture.
+An asynchronous, high-concurrency backend engine for digital content distribution.
+This system handles complex relational metadata, multi-tiered access control, and atomic financial transactions
+through a decoupled, event-driven architecture.
 
 
-🚀 Key Features
-Advanced Authentication & RBAC: Secure JWT-based authentication with three distinct permission levels (User, Moderator, Admin).
+🏗 Project Architecture & Structure
+The codebase is organized into a modular hierarchy to maintain strict separation between
+the transport layer, business logic, and background processing.
 
-Financial Integration: Complete checkout flow integrated with Stripe, including webhook handling for secure order fulfillment.
-
-Complex Content Discovery: Optimized filtering and searching through large movie libraries and metadata (actors, genres, etc.).
-
-Asynchronous Background Tasks: Utilizes Celery and Redis for transactional emails and periodic database cleanup.
-
-Social Interactions: Full support for likes/dislikes, comments, and personal "Favorite" collections.
-
-
-🛠 Tech Stack
-Framework: FastAPI (Python 3.12)
-
-Database: PostgreSQL + SQLAlchemy (Async)
-
-Migrations: Alembic
-
-Task Queue: Celery + Redis
-
-Payments: Stripe API
-
-Dependency Management: Poetry
-
-Containerization: Docker & Docker Compose
-
-
-📂 Project Structure
-The project follows a modular architecture designed for maintainability:
-
-├── alembic/          # Database migration history
+├── alembic/                # Schema versioning and migration history
 ├── src/
-│   ├── core/         # Security, Database config, Celery init
-│   ├── crud/         # Decoupled business logic (Create, Read, Update, Delete)
-│   ├── models/       # SQLAlchemy models
-│   ├── routers/      # API endpoints (Auth, Movies, Stripe, etc.)
-│   ├── schemas/      # Pydantic validation models
-│   ├── services/     # Third-party integrations (Stripe Service)
-│   ├── tasks/        # Celery background tasks (Emails, Cleanups)
-│   └── utils/        # Pagination and helpers
-├── main.py           # Application entry point
-└── seed.py           # Database seeding script
+│   ├── core/               # System Kernel: Security, Async Engine, Global Config
+│   ├── crud/               # Domain Engine: Complex SQLAlchemy query builders
+│   ├── models/             # Data Layer: Async models with M2M associations
+│   ├── routers/            # Interface Layer: API endpoints and RBAC dependencies
+│   ├── schemas/            # Validation Layer: Pydantic V2 serialization shapes
+│   ├── services/           # Integration Layer: Stripe SDK
+│   ├── tasks/              # Event Layer: Celery tasks (SMTP & Maintenance)
+│   └── utils/              # Shared Utilities: Pagination and async helpers
+├── main.py                 # Application entry point and router orchestration
+├── seed.py                 # Idempotent database seeding utility
+└── docker-compose.yml      # Service orchestration (App, Worker, Beat, Redis, DB)
 
 
-⚙️ Installation & Setup
+⚙️ Core System Setup
+These commands are specific to the initialization and state management of the online-cinema-api environment.
 
-1. Prerequisites
+1. Environment Initialization
+The system validates the .env configuration on startup via Pydantic Settings. 
 
-Docker and Docker Compose
-Stripe Account (for API keys)
+    cp .env.example .env 
 
-2. Environment Setup Clone the repository and create a .env file:
+2. Dependency Management (Poetry)
 
-cp .env.example .env 
-(Fill in your database credentials, Stripe keys, and SMTP settings)
+    poetry install
+    poetry shell
 
-3. Run with Docker 
+3. Database State Management
+To synchronize the PostgreSQL container with the current SQLAlchemy models:
 
-docker-compose up --build
+    docker-compose exec app alembic upgrade head
 
-4. Database Seeding To populate the database with initial movies and metadata: 
-
-docker-compose exec web python seed.py
-
-
-📖 API Documentation
-Once the server is running, you can explore the interactive API documentation:
-
-Swagger UI: http://localhost:8000/docs
-
-ReDoc: http://localhost:8000/redoc
+    docker-compose exec app python seed.py
 
 
-🔒 Permissions Overview
-User: Read movies, Post comments, Rate, Buy access, Manage Profile.
-Moderator: All User perms + Create/Update/Delete Movies & People.
-Admin: All Moderator perms + User Management.
+🔐 Identity & Access Management
+Access is managed through a hierarchical dependency chain in src/core/deps.py that validates
+JWT claims and UserGroup membership.
+
+Standard Access: get_current_active_user validates the sub claim and is_active status.
+
+Privileged Access:
+
+Moderator: Grants CRUD access to movie, people, and metadata routers.
+
+Admin: High-level access for user role elevation and financial auditing.
+
+Security Architecture: Implements Refresh Token Rotation to mitigate session hijacking and
+Argon2 hashing for credential entropy.
+
+
+🎞 Discovery Engine: Deep Relational Filtering
+The search logic in src/crud/movie.py is designed for high-dimensional metadata discovery.
+
+Query Optimization: Implements joinedload for one-to-one (Certification) and selectinload for
+many-to-many (Genres, Stars) to eliminate the N+1 problem.
+
+Unified Search: A single search parameter executes a case-insensitive scan across
+Movie Titles, Descriptions, Stars, and Directors using optimized outer joins.
+
+Filtering Parameters: Support for temporal (Year), physical (Runtime), and financial (Price) ranges, alongside
+IMDb and Meta Score thresholds.
+
+
+💳 Financial Engine & Fulfillment
+The Stripe integration is built as a non-blocking, event-driven pipeline.
+
+Checkout Session: Generates a secure, Stripe-hosted checkout linked to a PENDING order.
+
+Cryptographic Webhook: The /webhook endpoint in src/routers/payment.py verifies the Stripe-Signature.
+
+Atomic Fulfillment: On success, the payment_service.py executes an atomic transaction that:
+
+Transitions Order status to PAID or CANCELED.
+
+Maps the User to the Movie in the user_movies association table.
+
+Dispatches an asynchronous send_payment_notification_email_task.
+
+
+📧 Automated Lifecycle (Celery & Beat)
+Background operations are offloaded to Celery with Redis as the message broker.
+
+Transactional Tasks: SMTP operations for account activation, password resets, and purchase receipts.
+
+Scheduled Maintenance (Beat):
+
+cleanup_expired_tokens: Periodic purging of the activation_tokens table.
+
+cancel_pending_orders: Automatic cancellation of PENDING orders older than 24 hours to ensure accurate financial reporting.
+
+
+📖 API Reference & Inspection
+Interactive Documentation (Swagger): http://localhost:8000/docs
+
+Static Technical Docs (ReDoc): http://localhost:8000/redoc

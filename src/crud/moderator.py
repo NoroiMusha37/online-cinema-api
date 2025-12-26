@@ -9,7 +9,6 @@ from src.models.movie import Movie, Genre, Certification, Star, Director
 from src.schemas.moderator import MovieCreate, MovieUpdate, NamedEntity
 from . import movie as movie_crud
 from . import validation
-from ..models import Cart, CartItem
 
 type MetadataEntity = Certification | Genre | Star | Director
 
