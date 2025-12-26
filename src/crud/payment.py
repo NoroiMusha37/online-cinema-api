@@ -17,10 +17,7 @@ from src.schemas.payment import PaymentCreate
 from src.crud import order as order_crud
 
 
-async def get_payment_by_id(
-        payment_id: int,
-        session: AsyncSession
-) -> Payment:
+async def get_payment_by_id(payment_id: int, session: AsyncSession) -> Payment:
     stmt = (
         select(Payment)
         .options(
