@@ -91,7 +91,10 @@ class MovieQueryParameters:
         self,
         page: int = Query(1, ge=1),
         size: int = Query(20, ge=1, le=100),
-        search: str | None = Query(None),
+        search: str | None = Query(
+            None,
+            alias="search by movie title/description, star/director name"
+        ),
         genre_ids: list[int] | None = Query(None, alias="genre"),
         year_from: int | None = Query(None, ge=1888),
         year_to: int | None = Query(None, ge=1888),
