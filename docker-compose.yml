@@ -41,6 +41,7 @@ services:
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
     volumes:
       - .:/app
+      - /app/.venv
 
   celery_worker:
     build: .
@@ -66,6 +67,7 @@ services:
       - MAIL_FROM_NAME=${MAIL_FROM_NAME}
     volumes:
       - .:/app
+      - /app/.venv
 
   celery_beat:
     build: .
@@ -77,6 +79,7 @@ services:
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
     volumes:
       - .:/app
+      - /app/.venv
 
 volumes:
   postgres_data:
