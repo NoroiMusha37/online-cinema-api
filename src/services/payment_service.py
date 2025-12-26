@@ -14,6 +14,7 @@ from src.crud import order as order_crud
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
 async def initiate_checkout_session(
         order_id: int,
         user_id: int,
@@ -48,6 +49,10 @@ async def initiate_checkout_session(
                 "quantity": 1
             }],
             mode="payment",
+            metadata={
+                "user_id": str(user_id),
+                "order_id": str(order.id),
+            },
             payment_intent_data={
                 "metadata": {
                     "user_id": str(user_id),
@@ -72,7 +77,6 @@ async def initiate_checkout_session(
         )
 
 
-
 async def handle_stripe_webhook(
         request: Request, session: AsyncSession
 ) -> Payment | None:
@@ -89,26 +93,26 @@ async def handle_stripe_webhook(
             detail="Invalid Stripe Signature",
         )
 
-    intent = event["data"]["object"]
+    obj = event["data"]["object"]
     status_mapping = {
-        "payment_intent.succeeded": PaymentStatusEnum.SUCCESSFUL,
-        "payment_intent.canceled": PaymentStatusEnum.CANCELED,
-        "payment_intent.payment_failed": PaymentStatusEnum.CANCELED,
+        "checkout.session.completed": PaymentStatusEnum.SUCCESSFUL,
+        "checkout.session.expired": PaymentStatusEnum.CANCELED,
+        "checkout.session.async_payment_failed": PaymentStatusEnum.CANCELED,
     }
     internal_status = status_mapping.get(event["type"])
 
     if not internal_status:
         return
 
-    metadata = intent.get("metadata", {})
+    metadata = obj.get("metadata", {})
     user_id = metadata.get("user_id")
     order_id = metadata.get("order_id")
 
     payment_in = PaymentCreate(
         user_id=int(user_id),
         order_id=int(order_id),
-        amount=intent["amount"] / 100,
-        external_payment_id=intent["id"],
+        amount=obj["amount_total"] / 100,
+        external_payment_id=obj["payment_intent"],
         status=internal_status
     )
 
