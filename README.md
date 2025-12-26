@@ -1,107 +1,236 @@
-Online Cinema API 🎬
-An asynchronous, high-concurrency backend engine for digital content distribution.
-This system handles complex relational metadata, multi-tiered access control, and atomic financial transactions
-through a decoupled, event-driven architecture.
+# 🎬 Online Cinema API
+
+Backend API for an online cinema platform built with **FastAPI**.  
+The project covers user management, movie catalog, shopping cart, orders, and Stripe payments, with background tasks
+powered by Celery.
+
+This project is intended as an **educational** and **portfolio** backend showcasing a modular FastAPI architecture.
+
+---
+
+## 🚀 Features
+
+### 👤 Authentication & Users
+- Registration with email activation token
+- Admin can manually activate accounts
+- JWT authentication (access & refresh)
+- Refresh tokens stored in database
+- Logout revokes refresh token
+- Change password & reset via email
+- Roles: **User**, **Moderator**, **Admin**
+
+### 🎥 Movies & Interactions
+- Browse catalog with pagination
+- Filter, sort, and search
+- Like / dislike movies
+- Comments with email notifications on replies
+- Favorites list
+- Rate movies (1–10)
+- Genres with movie counters
+- Browse purchased movies
+
+### 🛒 Shopping Cart
+- One cart per user
+- Add / remove / clear movies
+- Prevent duplicates
+- Prevent adding already purchased movies
+
+### 📦 Orders
+- Create orders from cart
+- Statuses: `pending`, `paid`, `canceled`
+- Order history
+- Price snapshot per item
+- Cancel before payment
+
+### 💳 Payments
+- Stripe integration
+- Webhook validation
+- Payment history
+- Refund support
+- Email notifications after payment
+
+### ⚙️ Background Tasks
+Handled asynchronously with **Celery + Redis**:
+- Send activation emails
+- Send password reset emails
+- Notify about comment replies
+- Notify about payment status
+- Cleanup of expired tokens
+- Cleanup long pending Orders
+
+---
+
+## 🧰 Tech Stack
+
+- Python 3.12
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+- Celery + Redis
+- Stripe API
+- fastapi-mail (SMTP)
+- Docker & Docker Compose
+- Poetry
+- GitHub Actions
+
+---
+
+## 📁 Project Structure
+
+src/
+├── core/ # config, db, security, celery, deps
+├── crud/ # business logic
+├── models/ # SQLAlchemy models
+├── routers/ # API endpoints
+├── schemas/ # Pydantic schemas
+├── services/ # services (payments)
+├── tasks/ # Celery tasks
+├── utils/ # helpers
+└── main.py # FastAPI entrypoint
+
+alembic/ # migrations
+
+makefile
+Copy code
+
+---
+
+## ⚙️ Environment Configuration
+
+Create `.env` from the provided `.env.example`:
+
+`env
+# --- DATABASE CONFIGURATION ---
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_NAME=cinema_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+
+# --- SECURITY ---
+SECRET_KEY=your_secret_random_string_here
+JWT_ENCODING_ALGORITHM=HS256
+
+# --- TOKEN EXPIRATION ---
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+ACCOUNT_ACTIVATION_HOURS=24
+PASSWORD_RESET_TOKEN_EXPIRE_MINUTES=30
+
+# --- CELERY / REDIS ---
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# --- EMAIL CONFIGURATION ---
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_FROM=no-reply@cinema-api.com
+MAIL_PORT=587
+MAIL_SERVER=smtp.gmail.com
+MAIL_FROM_NAME="Online Cinema"
+
+# --- INFRASTRUCTURE ---
+DOMAIN=http://localhost:8000
+
+# --- STRIPE ---
+STRIPE_SECRET_KEY=sk_test_your_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 
 
-🏗 Project Architecture & Structure
-The codebase is organized into a modular hierarchy to maintain strict separation between
-the transport layer, business logic, and background processing.
+🐳 Run with Docker
+All services are managed via docker-compose.
 
-├── alembic/                # Schema versioning and migration history
-├── src/
-│   ├── core/               # System Kernel: Security, Async Engine, Global Config
-│   ├── crud/               # Domain Engine: Complex SQLAlchemy query builders
-│   ├── models/             # Data Layer: Async models with M2M associations
-│   ├── routers/            # Interface Layer: API endpoints and RBAC dependencies
-│   ├── schemas/            # Validation Layer: Pydantic V2 serialization shapes
-│   ├── services/           # Integration Layer: Stripe SDK
-│   ├── tasks/              # Event Layer: Celery tasks (SMTP & Maintenance)
-│   └── utils/              # Shared Utilities: Pagination and async helpers
-├── main.py                 # Application entry point and router orchestration
-├── seed.py                 # Idempotent database seeding utility
-└── docker-compose.yml      # Service orchestration (App, Worker, Beat, Redis, DB)
+docker-compose up --build
 
+This starts:
 
-⚙️ Core System Setup
-These commands are specific to the initialization and state management of the online-cinema-api environment.
+FastAPI app
+PostgreSQL
+Redis
+Celery worker
+Celery beat
 
-1. Environment Initialization
-The system validates the .env configuration on startup via Pydantic Settings. 
+The web service automatically runs migrations on startup:
+alembic upgrade head && uvicorn main:app ...
 
-    cp .env.example .env 
+API will be available at:
 
-2. Dependency Management (Poetry)
-
-    poetry install
-    poetry shell
-
-3. Database State Management
-To synchronize the PostgreSQL container with the current SQLAlchemy models:
-
-    docker-compose exec app alembic upgrade head
-
-    docker-compose exec app python seed.py
+http://localhost:8000
 
 
-🔐 Identity & Access Management
-Access is managed through a hierarchical dependency chain in src/core/deps.py that validates
-JWT claims and UserGroup membership.
+Swagger docs:
 
-Standard Access: get_current_active_user validates the sub claim and is_active status.
-
-Privileged Access:
-
-Moderator: Grants CRUD access to movie, people, and metadata routers.
-
-Admin: High-level access for user role elevation and financial auditing.
-
-Security Architecture: Implements Refresh Token Rotation to mitigate session hijacking and
-Argon2 hashing for credential entropy.
+http://localhost:8000/docs
 
 
-🎞 Discovery Engine: Deep Relational Filtering
-The search logic in src/crud/movie.py is designed for high-dimensional metadata discovery.
+🗄️ Database Migrations
+Migrations are applied automatically when the web container starts.
 
-Query Optimization: Implements joinedload for one-to-one (Certification) and selectinload for
-many-to-many (Genres, Stars) to eliminate the N+1 problem.
-
-Unified Search: A single search parameter executes a case-insensitive scan across
-Movie Titles, Descriptions, Stars, and Directors using optimized outer joins.
-
-Filtering Parameters: Support for temporal (Year), physical (Runtime), and financial (Price) ranges, alongside
-IMDb and Meta Score thresholds.
+No manual Alembic commands are required when using Docker.
 
 
-💳 Financial Engine & Fulfillment
-The Stripe integration is built as a non-blocking, event-driven pipeline.
+🔐 Authentication Flow
+User registers
 
-Checkout Session: Generates a secure, Stripe-hosted checkout linked to a PENDING order.
+Activation token sent via email
 
-Cryptographic Webhook: The /webhook endpoint in src/routers/payment.py verifies the Stripe-Signature.
+User activates account (or admin activates manually)
 
-Atomic Fulfillment: On success, the payment_service.py executes an atomic transaction that:
+Login → access & refresh tokens issued
 
-Transitions Order status to PAID or CANCELED.
+Refresh token used to obtain new access token
 
-Maps the User to the Movie in the user_movies association table.
-
-Dispatches an asynchronous send_payment_notification_email_task.
+Logout → refresh token deleted from DB
 
 
-📧 Automated Lifecycle (Celery & Beat)
-Background operations are offloaded to Celery with Redis as the message broker.
-
-Transactional Tasks: SMTP operations for account activation, password resets, and purchase receipts.
-
-Scheduled Maintenance (Beat):
-
-cleanup_expired_tokens: Periodic purging of the activation_tokens table.
-
-cancel_pending_orders: Automatic cancellation of PENDING orders older than 24 hours to ensure accurate financial reporting.
+👥 Roles
+User	Browse, interact, buy movies
+Moderator	Manage movies & metadata
+Admin	Manage users, roles, activation
 
 
-📖 API Reference & Inspection
-Interactive Documentation (Swagger): http://localhost:8000/docs
+🗃️ Database Overview
+Main entities:
 
-Static Technical Docs (ReDoc): http://localhost:8000/redoc
+Users: User, UserProfile, UserGroup
+
+Tokens: ActivationToken, PasswordResetToken, RefreshToken
+
+Movies: Movie, Genre, Star, Director, Certification
+
+Cart: Cart, CartItem
+
+Orders: Order, OrderItem
+
+Payments: Payment, PaymentItem
+
+
+Key ideas:
+
+One cart per user
+
+Many-to-many relations for movies & metadata
+
+Snapshot prices stored in orders and payments
+
+Tokens persisted and cleaned up by background tasks
+
+
+🧪 CI/CD
+GitHub Actions is used for:
+
+Code quality checks
+
+Linting
+
+Automated validation on push & PR
+
+
+📖 API Documentation
+
+Interactive API docs:
+/docs
+
+Alternative view:
+/redoc
